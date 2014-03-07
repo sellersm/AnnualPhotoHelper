@@ -792,7 +792,7 @@ Public Class Form1
 		Dim dfi As New Blackbaud.AppFx.XmlTypes.DataForms.DataFormItem
 
 		Req.ClientAppInfo = _clientAppInfoHeader
-		Req.ID = _completeInteractionsRecordOpId
+		'Req.ID = _completeInteractionsRecordOpId
 		Req.RecordOperationName = _recordopname	'"Event Expense: Delete"
 
 		'turn the validated child photo list to XML:
@@ -812,6 +812,9 @@ Public Class Form1
 
 		'DataFormItem is passed to the request
 		Req.Parameters = dfi
+
+		'Record OP ID is the context or ID parameter passed into record op.  It's required in the SPEC, we're sending the XML collection:
+		Req.ID = xmlString
 
 		Try
 			Reply = _appFx.RecordOperationPerform(Req)
@@ -881,7 +884,9 @@ Public Class Form1
 
 		'this gets the list of children by XML list of lookupid values:
 		Req.DataListID = _interactionExceptionsDataListId	'  "97c4f605-2bbb-4624-acbd-38f67441e630")    ' Child Search data list
-		'Req.ContextRecordID = _photoHelperSessionId.ToString()	'child Lookup Id  "00000000-0000-0000-0000-000000000000"
+		Req.ContextRecordID = _photoHelperSessionId.ToString()	'child Lookup Id  "00000000-0000-0000-0000-000000000000"
+
+		'MsgBox(_photoHelperSessionId.ToString())
 
 		fvSet.Add(New Blackbaud.AppFx.XmlTypes.DataForms.DataFormFieldValue With {.ID = "SESSIONID", .Value = _photoHelperSessionId.ToString()})
 
