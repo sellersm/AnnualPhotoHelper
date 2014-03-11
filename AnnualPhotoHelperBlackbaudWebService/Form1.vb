@@ -9,6 +9,7 @@ Imports nullpointer.Metaphone
 
 Public Class Form1
 
+#Region "Private definitions"
 	'The files that will be validated, have a name like this:
 	'IN-131 C102900 Revathi Sait 2014.JPG
 	'<ProjectID> <Lookupid> <Firstname> <Lastname>
@@ -23,7 +24,7 @@ Public Class Form1
 
 	Private _childDataListId As Guid = New Guid("1a347536-d326-4f1f-8c6b-87d8320b4b18")					 'Child Data For Photo API Data List
 	Private _childDataListByXmlId As Guid = New Guid("6136072e-f5b4-4367-8121-f45b9c7a07e6")			 'Get Child List For Photo API Data List
-	Private _completeInteractionsRecordOpId As String = "18afc1ad-dd5f-4a3c-9c9b-206943857edf"	 ' this is the test record op that does nothing: "7869525e-1b2d-41e8-b68c-df9d6c0ac714"			 'Record Op ID
+	Private _completeInteractionsRecordOpId As Guid = New Guid("18afc1ad-dd5f-4a3c-9c9b-206943857edf")	 ' this is the test record op that does nothing: "7869525e-1b2d-41e8-b68c-df9d6c0ac714"			 'Record Op ID
 	Private _interactionExceptionsDataListId As Guid = New Guid("e2d58c9d-df33-4f49-835b-f2b7db3846d1")	 'Photo Interaction Exceptions Data List
 	Private _photoHelperSessionId As Guid
 
@@ -43,6 +44,8 @@ Public Class Form1
 	' Set from the Config file (My.Settings):
 	Private _debugging As Boolean = False
 
+	Private _interactionComment As String = String.Empty
+
 	'The following are now set in the GetSetConfigSettingsValues() method, so what's shown here is overwritten at form load time:
 	Private _notincrmfoldername As String = "Children_Not_In_CRM\"
 	Private _unmatchedprojectfoldername As String = "Incorrect_Project_ID\"
@@ -54,6 +57,13 @@ Public Class Form1
 	Private _photoyearfile As String = "2014.JPG"
 	Private _photoyearfile_lowercase As String = "2014.jpg"
 	Private _photoyearfile_withspace As String = "2014 .JPG"
+	Private _securelyStoredUserName As String = "PhotoAPIUser21195D"	' "MobileServices21195p"
+	Private _securelyStoredPassword As String = "P@ssword1"						'"7Fny8kbmDxr4"
+	Private _dbName As String = String.Empty
+	Private _appFxURL As String = String.Empty
+#End Region
+
+
 
 	Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 		InitializeEverything()
@@ -68,12 +78,24 @@ Public Class Form1
 			Cursor.Current = Cursors.WaitCursor
 			Cursor.Show()
 
+			'ensure that we have the config values before continuing:
+			If String.IsNullOrEmpty(_appFxURL) Then
+				Throw New ArgumentNullException("WebServiceURL", "The WebAPI URL is empty! Unable to get value from App.Config file.")
+			End If
+
+			If String.IsNullOrEmpty(_dbName) Then
+				Throw New ArgumentNullException("DBName", "The DB Name is empty! Unable to get value from App.Config file.")
+			End If
+
+
 			'Instantiate the proxy to the Infinity application
 			_appFx = New Blackbaud.AppFx.WebAPI.ServiceProxy.AppFxWebService
 
 			'When running local, don't need credentials!!
 			'Grab the network credentials.  See GetNetworkCredentials() for details.
-			_myCred = GetNetworkCredentials()
+			Dim NetworkCredential As New System.Net.NetworkCredential(_securelyStoredUserName, _securelyStoredPassword)
+			'_myCred = GetNetworkCredentials()
+			_myCred = NetworkCredential
 
 			'Set the credentials for the service proxy.
 			_appFx.Credentials = _myCred
@@ -86,16 +108,17 @@ Public Class Form1
 			'AppFxWebService.asmx is the single SOAP endpoint for accessing all application features.
 			'Grab the url from the Blackbaud AppFX Server HTTP Endpoint Reference (endpointhelp.html).
 
-			'_appFx.Url = "http://localhost/ocmcrm293/appfxwebservice.asmx"
-			_appFx.Url = "https://bbecdev03bo3.blackbaudhosting.com/21195D_c1b77079-b579-4bfc-9532-4d895d9e5891/appfxwebservice.asmx" ' DEV environment
+			_appFx.Url = _appFxURL	' "https://bbecdev03bo3.blackbaudhosting.com/21195D_c1b77079-b579-4bfc-9532-4d895d9e5891/appfxwebservice.asmx" ' DEV environment
+
+			'_appFx.Url = "http://localhost/ocmcrm293/appfxwebservice.asmx"   'local
 			'_appFx.Url = "https://bbisec04pro.blackbaudhosting.com/21195P_a4c313dc-543a-45d5-b64d-72e8f900c2df/appfxwebservice.asmx" ' PROD environment
 
 			'Provide the ClientAppName which will be logged in the Infinity database and used for auditing purposes.
 			'Use a client application name that identifies your custom client software from the web shell and any other client user interfaces.
 			_clientAppInfoHeader = New Blackbaud.AppFx.WebAPI.ServiceProxy.ClientAppInfoHeader()
 			_clientAppInfoHeader.ClientAppName = "CustomEventManager"
-			_clientAppInfoHeader.REDatabaseToUse = "21195D"	'DEV
-			'_clientAppInfoHeader.REDatabaseToUse = "BBInfinity"	 'local = BBInfinity  ' "21195P"		'PROD
+			_clientAppInfoHeader.REDatabaseToUse = _dbName	 ' "21195D"	'DEV
+			'_clientAppInfoHeader.REDatabaseToUse = _dbName ' "BBInfinity"	 'local = BBInfinity  ' "21195P"		'PROD
 
 		Catch ex As Exception
 			MsgBox(ex.Message.ToString)
@@ -107,25 +130,25 @@ Public Class Form1
 		End Try
 	End Sub
 
-	Private Function GetNetworkCredentials() As System.Net.ICredentials
+	'Private Function GetNetworkCredentials() As System.Net.ICredentials
 
-		Dim securelyStoredUserName, securelyStoredPassword As String
-		'BBIS brushtest
-		'securelyStoredUserName = "TestWebService21195D"
-		'securelyStoredPassword = "BrushP@ssTest" -- DEV
+	'	Dim securelyStoredUserName, securelyStoredPassword As String
+	'	'BBIS brushtest
+	'	'securelyStoredUserName = "TestWebService21195D"
+	'	'securelyStoredPassword = "BrushP@ssTest" -- DEV
 
-		securelyStoredUserName = "PhotoAPIUser21195D"	' "MobileServices21195p"
-		securelyStoredPassword = "P@ssword1"						'"7Fny8kbmDxr4"
+	'	_securelyStoredUserName = "PhotoAPIUser21195D"	' "MobileServices21195p"
+	'	_securelyStoredPassword = "P@ssword1"						'"7Fny8kbmDxr4"
 
 
-		'**** Providing Credentials
-		'System.Net.NetworkCredential implements System.NET.ICredentials
-		'Typically the developer does not need to provide the domain name.  This holds true for BBEC instances, as well. 
-		Dim NetworkCredential As New System.Net.NetworkCredential(securelyStoredUserName, securelyStoredPassword)
+	'	'**** Providing Credentials
+	'	'System.Net.NetworkCredential implements System.NET.ICredentials
+	'	'Typically the developer does not need to provide the domain name.  This holds true for BBEC instances, as well. 
+	'	Dim NetworkCredential As New System.Net.NetworkCredential(_securelyStoredUserName, _securelyStoredPassword)
 
-		Return NetworkCredential
+	'	Return NetworkCredential
 
-	End Function
+	'End Function
 
 	'Private Sub LoadChildren(ByVal ConstituentID As System.Guid)
 
@@ -415,6 +438,7 @@ Public Class Form1
 				xmlWriter.WriteElementString("ACTUALDATE", DateTimePicker1.Value.ToShortDateString())
 			End If
 			xmlWriter.WriteElementString("COMPLETEINTERACTIONPROCESSID", _photoHelperSessionId.ToString())
+			xmlWriter.WriteElementString("COMMENT", _interactionComment)
 			'Next
 
 			xmlWriter.WriteEndElement()
@@ -489,11 +513,15 @@ Public Class Form1
 										If (Not String.IsNullOrEmpty(crmMphone.AlternateKey) AndAlso Not String.IsNullOrEmpty(fileMphone.AlternateKey)) Then
 											If Not crmMphone.AlternateKey.Equals(fileMphone.AlternateKey) Then
 												'just doesn't match!
+												'set the crm childname so it will be output
+												photoChild.CRMChildName = crmChild.CRMChildName
 												_nameNotMatchList.ChildPhotoList.Add(photoChild)
 												isChildValid = False
 											End If
 										Else
 											'just doesn't match!
+											'set the crm childname so it will be output
+											photoChild.CRMChildName = crmChild.CRMChildName
 											_nameNotMatchList.ChildPhotoList.Add(photoChild)
 											isChildValid = False
 										End If
@@ -555,6 +583,28 @@ Public Class Form1
 		Dim dataCounter As Integer = 0
 
 		Try
+			'set the comment value based on which source radio button is checked:
+			Dim photoSource As String = String.Empty
+
+			'check if Other Radio button is checked and Other text is completed:
+			If otherRadioButton.Checked = True Then
+				If String.IsNullOrEmpty(otherSourceText.Text) Then
+					Throw New ArgumentNullException("Other", "Other Source value is required if the picture source is Other.")
+				Else
+					photoSource = otherSourceText.Text
+				End If
+			End If
+
+			If ftpRadioButton.Checked = True Then
+				photoSource = "FTP"
+			End If
+
+			If emailRadioButton.Checked = True Then
+				photoSource = "Email"
+			End If
+
+			_interactionComment = String.Format("Received {0} via {1} -- {2}", Me.DateTimePicker1.Value.ToShortDateString(), photoSource, Environment.UserName)
+
 			If Not String.IsNullOrEmpty(TextBox_SourceFolder.Text) Then
 				If IO.Directory.Exists(TextBox_SourceFolder.Text) Then
 					dirinfo = New DirectoryInfo(TextBox_SourceFolder.Text)
@@ -598,6 +648,8 @@ Public Class Form1
 					allFiles = Nothing
 					dirinfo = Nothing
 
+					MsgBox("Photos validated and Interactions should have been completed for the valid children.")
+
 					resetButton.Enabled = True
 				Else
 					MsgBox("The folder entered (" & TextBox_SourceFolder.Text & ") does not exist.", MsgBoxStyle.Exclamation, "Folder Does Not Exist")
@@ -615,17 +667,18 @@ Public Class Form1
 
 	Private Function CreatePhotoCollectionFromReply(ByVal Reply As ServiceProxy.DataListLoadReply) As List(Of ChildPhotoData)
 		Dim returnList As New List(Of ChildPhotoData)
-		'sc.[FIRSTNAME] as FIRSTNAME, 
-		'sc.[LASTNAME] as LASTNAME, 
+		'rtrim(replace(sc.[NAME], ' ','')) as CHILDNAME,
 		'so.LOOKUPID as CHILDID, 
-		'sl.LOOKUPID as LOCATIONID, 
+		'sl.LOOKUPID as LOCATIONID,
+		'sc.[NAME] as CRMNAME
 
 		Dim childNameColumn As Integer = 0
 		Dim lookupIdColumn As Integer = 1
 		Dim projectIdColumn As Integer = 2
+		Dim crmNameColumn As Integer = 3
 
 		For Each row As Blackbaud.AppFx.WebAPI.ServiceProxy.DataListResultRow In Reply.Rows
-			returnList.Add(New ChildPhotoData(row.Values(lookupIdColumn).ToString(), row.Values(projectIdColumn).ToString(), row.Values(childNameColumn).ToString().Replace(" ", "")))
+			returnList.Add(New ChildPhotoData(row.Values(lookupIdColumn).ToString(), row.Values(projectIdColumn).ToString(), row.Values(childNameColumn).ToString().Replace(" ", ""), "", row.Values(crmNameColumn).ToString()))
 		Next
 
 		Return returnList
@@ -760,7 +813,13 @@ Public Class Form1
 		Using outfile As New StreamWriter(folderName & fileName, False)
 			For Each child As ChildPhotoData In childList.ChildPhotoList
 				'outfile.WriteLine(child.ChildLookupId & ":" & child.ChildName & ":" & child.ChildProject & ":" & child.PhotoFile)
-				outfile.WriteLine(child.PhotoFile)
+				' for the mismatched names, output the CRM Name data as well:
+				If fileName.ToLower().Equals("namesdonotmatch.txt") Then
+					outfile.WriteLine(String.Format("CRM Name: {0}           Photo File: {1}", child.CRMChildName, child.PhotoFile))
+				Else
+					outfile.WriteLine(child.PhotoFile)
+				End If
+
 			Next
 			outfile.Close()
 		End Using
@@ -804,7 +863,7 @@ Public Class Form1
 		End If
 
 		'these are used for the parameters, which is the XML and ChangeAgentID which will be NULL value:
-		fvSet.Add(New Blackbaud.AppFx.XmlTypes.DataForms.DataFormFieldValue With {.ID = "ID", .Value = "XML String"})
+		fvSet.Add(New Blackbaud.AppFx.XmlTypes.DataForms.DataFormFieldValue With {.ID = "ID", .Value = xmlString})
 		fvSet.Add(New Blackbaud.AppFx.XmlTypes.DataForms.DataFormFieldValue With {.ID = "CHANGEAGENTID", .Value = Nothing})
 
 		'The DataFormItem is used to hold the set of form fields.
@@ -815,6 +874,7 @@ Public Class Form1
 
 		'Record OP ID is the context or ID parameter passed into record op.  It's required in the SPEC, we're sending the XML collection:
 		Req.ID = xmlString
+		Req.RecordOperationID = _completeInteractionsRecordOpId
 
 		Try
 			Reply = _appFx.RecordOperationPerform(Req)
@@ -823,8 +883,6 @@ Public Class Form1
 			ProcessInteractionExceptions()
 
 			DisplayComparisonResultsInListView(_childValidatedList, lvResults)
-
-			MsgBox("Photos validated and Interactions should have been completed for the valid children.")
 
 		Catch exSoap As System.Web.Services.Protocols.SoapException
 			'If an error occurs we attach a SOAP fault error header.
@@ -994,16 +1052,16 @@ Public Class Form1
 
 		For Each fl As FileInfo In allFiles
 			'populate collection of ChildPhotoData objects from filenames
-			fileNameTemp = fl.Name.Replace(_PHOTOYEARFILE, "").Trim()
+			fileNameTemp = fl.Name.Replace(_photoyearfile, "").Trim()
 
 			'check for the lowercase extension
 			If fileNameTemp.Contains("jpg") Then
-				fileNameTemp = fileNameTemp.Replace(_PHOTOYEARFILE_LOWERCASE, "").Trim()
+				fileNameTemp = fileNameTemp.Replace(_photoyearfile_lowercase, "").Trim()
 			End If
 
 			'check for the case where a space is after the photo year:  "2014 .JPG"
-			If fileNameTemp.Contains(_PHOTOYEARFILE_WITHSPACE) Then
-				fileNameTemp = fileNameTemp.Replace(_PHOTOYEARFILE_WITHSPACE, "").Trim()
+			If fileNameTemp.Contains(_photoyearfile_withspace) Then
+				fileNameTemp = fileNameTemp.Replace(_photoyearfile_withspace, "").Trim()
 			End If
 
 			fileNameItems = fileNameTemp.Split(" ")
@@ -1040,6 +1098,32 @@ Public Class Form1
 		_photoyearfile_lowercase = My.Settings.PHOTOYEARFILE_LOWERCASE	'"2014.jpg"
 		_photoyearfile_withspace = My.Settings.PHOTOYEARFILE_WITHSPACE	'"2014 .JPG"
 		_debugging = My.Settings.DEBUGGING
+
+		'these settings are environment specific:
+		If My.Settings.TARGET_ENVIRONMENT.ToLower().Equals("dev") Then
+			_securelyStoredUserName = My.Settings.DEVUN	' "PhotoAPIUser21195D"	' "MobileServices21195p"
+			_securelyStoredPassword = My.Settings.DEVPW	 ' "P@ssword1"						'"7Fny8kbmDxr4"
+			_appFxURL = My.Settings.DEVURL
+			_dbName = My.Settings.DEV_DB
+		Else
+			_securelyStoredUserName = My.Settings.PRODUN	' "PhotoAPIUser21195D"	' "MobileServices21195p"
+			_securelyStoredPassword = My.Settings.PRODPW	 ' "P@ssword1"						'"7Fny8kbmDxr4"
+			_appFxURL = My.Settings.PRODURL
+			_dbName = My.Settings.PROD_DB
+		End If
+
+		If _debugging = True Then
+			MsgBox(My.Settings.TARGET_ENVIRONMENT)
+			MsgBox(_appFxURL)
+			MsgBox(_dbName)
+			MsgBox(_securelyStoredPassword)
+			MsgBox(_securelyStoredUserName)
+		End If
+
+		'set the display label value:
+		Me.environmentLabel.Text = My.Settings.TARGET_ENVIRONMENT
+		Me.environmentLabel.Visible = True
+
 	End Sub
 
 	Private Sub nameValidationOverrideCheckBox_CheckedChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles nameValidationOverrideCheckBox.CheckedChanged
@@ -1052,6 +1136,8 @@ Public Class Form1
 	End Sub
 
 	Private Sub InitializeEverything()
+		GetSetConfigSettingsValues()
+
 		'this resets/restarts stuff, called by Form Load and by Reset button
 		InitializeAppFxWebService()
 
@@ -1062,7 +1148,11 @@ Public Class Form1
 		namesNotMatchOutputLabel.Visible = False
 		projectNotMatchOutputLabel.Visible = False
 
-		GetSetConfigSettingsValues()
+		ftpRadioButton.Checked = True
+		otherLabel.Visible = False
+		otherSourceText.Visible = False
+		nameValidationOverrideCheckBox.Checked = False
+
 
 		'this is passed into record operation and used for the insert into any photo interaction exceptions
 		If _debugging = True Then
@@ -1114,5 +1204,11 @@ Public Class Form1
 	Private Sub resetButton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles resetButton.Click
 		InitializeEverything()
 		resetButton.Enabled = False
+	End Sub
+
+
+	Private Sub otherRadioButton_CheckedChanged(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles otherRadioButton.CheckedChanged
+		otherLabel.Visible = otherRadioButton.Checked
+		otherSourceText.Visible = otherRadioButton.Checked
 	End Sub
 End Class

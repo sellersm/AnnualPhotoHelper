@@ -35,5 +35,32 @@
     <Setting Name="DEBUGGING" Type="System.String" Scope="Application">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="DEVURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://bbecdev03bo3.blackbaudhosting.com/21195D_c1b77079-b579-4bfc-9532-4d895d9e5891/appfxwebservice.asmx</Value>
+    </Setting>
+    <Setting Name="PRODURL" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://bbisec04pro.blackbaudhosting.com/21195P_a4c313dc-543a-45d5-b64d-72e8f900c2df/appfxwebservice.asmx</Value>
+    </Setting>
+    <Setting Name="TARGET_ENVIRONMENT" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Dev</Value>
+    </Setting>
+    <Setting Name="DEV_DB" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">21195D</Value>
+    </Setting>
+    <Setting Name="PROD_DB" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">BBInfinity</Value>
+    </Setting>
+    <Setting Name="DEVUN" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">PhotoAPIUser21195D</Value>
+    </Setting>
+    <Setting Name="DEVPW" Type="System.String" Scope="User">
+      <Value Profile="(Default)">P@ssword1</Value>
+    </Setting>
+    <Setting Name="PRODUN" Type="System.String" Scope="User">
+      <Value Profile="(Default)">PhotoAPIUser21195P</Value>
+    </Setting>
+    <Setting Name="PRODPW" Type="System.String" Scope="User">
+      <Value Profile="(Default)">P@ssword1</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

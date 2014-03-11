@@ -3,7 +3,7 @@
 <Serializable()> Public Class ChildPhotoData
 	Implements IComparable
 
-
+	Private _crmName As String
 	Private _childLookupId As String
 	Private _childProject As String
 	Private _childName As String
@@ -56,6 +56,16 @@
 		End Set
 	End Property
 
+	Public Property CRMChildName() As String
+		Get
+			Return _crmName
+		End Get
+		Set(ByVal value As String)
+			_crmName = value
+		End Set
+	End Property
+
+
 	Public Sub New(ByVal lookupid As String, ByVal project As String, ByVal childName As String)
 		_childLookupId = lookupid
 		_childProject = project
@@ -69,11 +79,21 @@
 		_fileName = fileName
 	End Sub
 
+	Public Sub New(ByVal lookupid As String, ByVal project As String, ByVal childName As String, ByVal fileName As String, ByVal crmChildName As String)
+		_childLookupId = lookupid
+		_childProject = project
+		_childName = childName
+		_fileName = fileName
+		_crmName = crmChildName
+	End Sub
+
+
 	Public Sub New()
 		_childLookupId = String.Empty
 		_childProject = String.Empty
 		_childName = String.Empty
 		_fileName = String.Empty
+		_crmName = String.Empty
 	End Sub
 
 	Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo

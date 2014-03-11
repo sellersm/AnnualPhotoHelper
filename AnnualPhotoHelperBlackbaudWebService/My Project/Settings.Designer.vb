@@ -152,6 +152,98 @@ Namespace My
                 Return CType(Me("DEBUGGING"),String)
             End Get
         End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("https://bbecdev03bo3.blackbaudhosting.com/21195D_c1b77079-b579-4bfc-9532-4d895d9e"& _ 
+            "5891/appfxwebservice.asmx")>  _
+        Public ReadOnly Property DEVURL() As String
+            Get
+                Return CType(Me("DEVURL"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("https://bbisec04pro.blackbaudhosting.com/21195P_a4c313dc-543a-45d5-b64d-72e8f900c"& _ 
+            "2df/appfxwebservice.asmx")>  _
+        Public ReadOnly Property PRODURL() As String
+            Get
+                Return CType(Me("PRODURL"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("Dev")>  _
+        Public ReadOnly Property TARGET_ENVIRONMENT() As String
+            Get
+                Return CType(Me("TARGET_ENVIRONMENT"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("21195D")>  _
+        Public ReadOnly Property DEV_DB() As String
+            Get
+                Return CType(Me("DEV_DB"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("BBInfinity")>  _
+        Public ReadOnly Property PROD_DB() As String
+            Get
+                Return CType(Me("PROD_DB"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("PhotoAPIUser21195D")>  _
+        Public ReadOnly Property DEVUN() As String
+            Get
+                Return CType(Me("DEVUN"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("P@ssword1")>  _
+        Public Property DEVPW() As String
+            Get
+                Return CType(Me("DEVPW"),String)
+            End Get
+            Set
+                Me("DEVPW") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("PhotoAPIUser21195P")>  _
+        Public Property PRODUN() As String
+            Get
+                Return CType(Me("PRODUN"),String)
+            End Get
+            Set
+                Me("PRODUN") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("P@ssword1")>  _
+        Public Property PRODPW() As String
+            Get
+                Return CType(Me("PRODPW"),String)
+            End Get
+            Set
+                Me("PRODPW") = value
+            End Set
+        End Property
     End Class
 End Namespace
 
