@@ -813,9 +813,12 @@ Public Class Form1
 		Using outfile As New StreamWriter(folderName & fileName, False)
 			For Each child As ChildPhotoData In childList.ChildPhotoList
 				'outfile.WriteLine(child.ChildLookupId & ":" & child.ChildName & ":" & child.ChildProject & ":" & child.PhotoFile)
-				' for the mismatched names, output the CRM Name data as well:
+				' for the mismatched names, output the CRM Name data as well, filename then CRM Name, like this:  
+				' IN-131 C117947 Joel John Philip 2014.jpg          Joel J. Philip          
+				' IN-131 C315156 Troy Christy Moses 2014.JPG          Troy C. Moses        
+
 				If fileName.ToLower().Equals("namesdonotmatch.txt") Then
-					outfile.WriteLine(String.Format("CRM Name: {0}           Photo File: {1}", child.CRMChildName, child.PhotoFile))
+					outfile.WriteLine(String.Format("{0}          {1}", child.PhotoFile, child.CRMChildName))
 				Else
 					outfile.WriteLine(child.PhotoFile)
 				End If
