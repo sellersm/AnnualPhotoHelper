@@ -209,40 +209,40 @@ Namespace My
             End Get
         End Property
         
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("P@ssword1")>  _
-        Public Property DEVPW() As String
+        Public ReadOnly Property DEVPW() As String
             Get
                 Return CType(Me("DEVPW"),String)
             End Get
-            Set
-                Me("DEVPW") = value
-            End Set
         End Property
         
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("PhotoAPIUser21195P")>  _
-        Public Property PRODUN() As String
+        Public ReadOnly Property PRODUN() As String
             Get
                 Return CType(Me("PRODUN"),String)
             End Get
-            Set
-                Me("PRODUN") = value
-            End Set
         End Property
         
-        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("P@ssword1")>  _
-        Public Property PRODPW() As String
+        Public ReadOnly Property PRODPW() As String
             Get
                 Return CType(Me("PRODPW"),String)
             End Get
-            Set
-                Me("PRODPW") = value
-            End Set
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("Filename_Parse_Error\")>  _
+        Public ReadOnly Property FILENAMEPARSEERRORFOLDERNAME() As String
+            Get
+                Return CType(Me("FILENAMEPARSEERRORFOLDERNAME"),String)
+            End Get
         End Property
     End Class
 End Namespace

@@ -9,6 +9,7 @@
 	Private _childName As String
 	Private _fileName As String
 	'Private _lastName As String
+	Private _completionDate As Date
 
 	<XmlElement(ElementName:="CHILDLOOKUPID")>
 	Public Property ChildLookupId() As String
@@ -65,6 +66,15 @@
 		End Set
 	End Property
 
+	Public Property CompletionDate() As Date
+		Get
+			Return _completionDate
+		End Get
+		Set(ByVal value As Date)
+			_completionDate = value
+		End Set
+	End Property
+
 
 	Public Sub New(ByVal lookupid As String, ByVal project As String, ByVal childName As String)
 		_childLookupId = lookupid
@@ -94,6 +104,7 @@
 		_childName = String.Empty
 		_fileName = String.Empty
 		_crmName = String.Empty
+		_completionDate = Nothing
 	End Sub
 
 	Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo

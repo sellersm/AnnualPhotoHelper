@@ -39,6 +39,7 @@ Public Class Form1
 	Private _alreadyCompletedList As New ChildPhotoCollection
 	Private _interactionNotFoundList As New ChildPhotoCollection
 	Private _unusableAlreadyCompletedList As New ChildPhotoCollection
+	Private _fileNameParseErrorList As New ChildPhotoCollection
 
 	'****** DEBUGGING USE ONLY!  *****
 	' Set from the Config file (My.Settings):
@@ -53,6 +54,8 @@ Public Class Form1
 	Private _alreadycompletedfoldername As String = "Already_Completed_Exceptions\"
 	Private _unusablealreadycompletedfoldername As String = "Unusable_Already_Completed_Exceptions\"
 	Private _interactionnotfoundfoldername As String = "Interactions_Not_In_CRM_Exceptions\"
+	Private _fileNameParseErrorFolderName As String = "Filename_Parse_Error\"
+
 	Private _recordopname As String = "Child Interaction Annual Photo Update Record Operation"	 ' "Completes Annual Photo Interactions Record Op"
 	Private _photoyearfile As String = "2014.JPG"
 	Private _photoyearfile_lowercase As String = "2014.jpg"
@@ -481,6 +484,8 @@ Public Class Form1
 			'iterate through the list of kids from photo folder, checking one-by-one against the kids returned from CRM
 			Dim index As Integer = 0
 
+			'??? Should I validate that the childlookupid begins with "C"?  If not, what should I do?
+
 			'search the crm list for this child
 			'if found, set the properties to variables
 			'compare variables to the photo folder child we're working with
@@ -489,47 +494,50 @@ Public Class Form1
 				isChildValid = True
 				photoChild = photoFolderChildrenList.ChildPhotoList(index)
 				crmChild = crmChildList.ChildPhotoList.Where(Function(x) x.ChildLookupId.Equals(photoChild.ChildLookupId)).FirstOrDefault()
-				If Not crmChild Is Nothing Then
-					'check project id
-					If Not photoChild.ChildProject.Equals(crmChild.ChildProject) Then
-						_projectIdNotMatchList.ChildPhotoList.Add(photoChild)
-						isChildValid = False
-					End If
-					'check further if check above passed:
-					If isChildValid = True Then
-						'if user checked the override box, then skip the Name check
-						If nameValidationOverrideCheckBox.Checked = False Then
-							If Not photoChild.ChildName.ToLower().Equals(crmChild.ChildName.ToLower()) Then
-								'try a soundex to see if the names are really the same
-								crmNameSoundex = crmSoundex.GetSoundex(crmChild.ChildName.ToLower())
-								fileNameSoundex = fileSoundex.GetSoundex(photoChild.ChildName.ToLower())
-								If Not crmNameSoundex.Equals(fileNameSoundex) Then
-									'use the DoubleMetaphone class to generate the keys & then compare
-									crmMphone.computeKeys(crmChild.ChildName.ToLower())
-									fileMphone.computeKeys(photoChild.ChildName.ToLower())
 
-									If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
-										'last resort, check the primary key value:
-										If (Not String.IsNullOrEmpty(crmMphone.AlternateKey) AndAlso Not String.IsNullOrEmpty(fileMphone.AlternateKey)) Then
-											If Not crmMphone.AlternateKey.Equals(fileMphone.AlternateKey) Then
-												'just doesn't match!
-												'set the crm childname so it will be output
-												photoChild.CRMChildName = crmChild.CRMChildName
-												_nameNotMatchList.ChildPhotoList.Add(photoChild)
-												isChildValid = False
-											End If
-										Else
+				If Not crmChild Is Nothing Then					
+					'if user checked the override box, then skip the Name check
+					If nameValidationOverrideCheckBox.Checked = False Then
+						If Not photoChild.ChildName.ToLower().Equals(crmChild.ChildName.ToLower()) Then
+							'try a soundex to see if the names are really the same
+							crmNameSoundex = crmSoundex.GetSoundex(crmChild.ChildName.ToLower())
+							fileNameSoundex = fileSoundex.GetSoundex(photoChild.ChildName.ToLower())
+							If Not crmNameSoundex.Equals(fileNameSoundex) Then
+								'use the DoubleMetaphone class to generate the keys & then compare
+								crmMphone.computeKeys(crmChild.ChildName.ToLower())
+								fileMphone.computeKeys(photoChild.ChildName.ToLower())
+
+								If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
+									'last resort, check the primary key value:
+									If (Not String.IsNullOrEmpty(crmMphone.AlternateKey) AndAlso Not String.IsNullOrEmpty(fileMphone.AlternateKey)) Then
+										If Not crmMphone.AlternateKey.Equals(fileMphone.AlternateKey) Then
 											'just doesn't match!
 											'set the crm childname so it will be output
 											photoChild.CRMChildName = crmChild.CRMChildName
 											_nameNotMatchList.ChildPhotoList.Add(photoChild)
 											isChildValid = False
 										End If
+									Else
+										'just doesn't match!
+										'set the crm childname so it will be output
+										photoChild.CRMChildName = crmChild.CRMChildName
+										_nameNotMatchList.ChildPhotoList.Add(photoChild)
+										isChildValid = False
 									End If
 								End If
 							End If
 						End If
 					End If
+
+					'check further if check above passed:
+					If isChildValid = True Then
+						'check project id
+						If Not photoChild.ChildProject.Equals(crmChild.ChildProject) Then
+							_projectIdNotMatchList.ChildPhotoList.Add(photoChild)
+							isChildValid = False
+						End If
+					End If
+
 				Else
 					_notInCrmList.ChildPhotoList.Add(photoChild)
 					isChildValid = False
@@ -585,6 +593,11 @@ Public Class Form1
 		Try
 			'set the comment value based on which source radio button is checked:
 			Dim photoSource As String = String.Empty
+
+			'check that the completion date value is NOT in the future!
+			If DateTimePicker1.Value > DateTime.Now() Then
+				Throw New Exception("The photo completion date cannot be in the future! Please double-check the value.")
+			End If
 
 			'check if Other Radio button is checked and Other text is completed:
 			If otherRadioButton.Checked = True Then
@@ -798,6 +811,16 @@ Public Class Form1
 			MoveExceptionPhotosToOutputFolder(Me.TextBox_SourceFolder.Text & "\" & _unusablealreadycompletedfoldername, _unusableAlreadyCompletedList)
 		End If
 
+		'filenames that couldn't be parsed correctly:
+		If _fileNameParseErrorList.ChildPhotoList.Count > 0 Then
+			If DoesOutputFolderExist(Me.TextBox_SourceFolder.Text & "\" & _fileNameParseErrorFolderName) = False Then
+				CreateOutputFolder(_fileNameParseErrorFolderName)
+			End If
+			WriteCollectionToOutputFolder(_fileNameParseErrorList, Me.TextBox_SourceFolder.Text & "\" & _fileNameParseErrorFolderName, "UnableToParseFilename.txt")
+			MoveExceptionPhotosToOutputFolder(Me.TextBox_SourceFolder.Text & "\" & _fileNameParseErrorFolderName, _fileNameParseErrorList)
+		End If
+
+
 		If _debugging = True Then
 			'write out the photo files into a file
 			WriteCollectionToOutputFolder(_childValidatedList, ".", "PhotoTesting.txt")
@@ -819,6 +842,9 @@ Public Class Form1
 
 				If fileName.ToLower().Equals("namesdonotmatch.txt") Then
 					outfile.WriteLine(String.Format("{0}          {1}", child.PhotoFile, child.CRMChildName))
+				ElseIf fileName.ToLower().Equals("interactionalreadycompleted.txt") Then
+					'output the completion date that came back from CRM
+					outfile.WriteLine(String.Format("{0}          {1}", child.PhotoFile, child.CompletionDate))
 				Else
 					outfile.WriteLine(child.PhotoFile)
 				End If
@@ -1001,9 +1027,11 @@ Public Class Form1
 		Dim isNotFound As Boolean = False
 
 		'select CHILDLOOKUPID,
-		'       Exception
+		'       EXCEPTION,
+		'		COMPLETEDDATE
 		Dim childIdColumn As Integer = 0
 		Dim exceptionColumn As Integer = 1
+		Dim completionDateColumn As Integer = 2
 
 		'this collection, _childValidatedList, has the children passed to the interactions record op
 		'if we couldn't complete the interactions, then the childphoto needs to be moved to the appropriate output folder
@@ -1022,6 +1050,8 @@ Public Class Form1
 					'put it in the already completed collection
 					_alreadyCompletedList.ChildPhotoList.Add(exceptionChild)
 					_childValidatedList.ChildPhotoList.Remove(exceptionChild)
+					'populate the completed date
+					exceptionChild.CompletionDate = CDate(row.Values(completionDateColumn))
 					isCompleted = True
 				End If
 				If row.Values(exceptionColumn).ToString().Equals("Interaction Not Found") Then
@@ -1035,6 +1065,8 @@ Public Class Form1
 					If Not isCompleted Then
 						_unusableAlreadyCompletedList.ChildPhotoList.Add(exceptionChild)
 						_childValidatedList.ChildPhotoList.Remove(exceptionChild)
+						'populate the completed date
+						exceptionChild.CompletionDate = CDate(row.Values(completionDateColumn))
 					End If
 				End If
 			Next
@@ -1058,13 +1090,18 @@ Public Class Form1
 			fileNameTemp = fl.Name.Replace(_photoyearfile, "").Trim()
 
 			'check for the lowercase extension
-			If fileNameTemp.Contains("jpg") Then
+			If fileNameTemp.Contains(_photoyearfile_lowercase) Then
 				fileNameTemp = fileNameTemp.Replace(_photoyearfile_lowercase, "").Trim()
 			End If
 
 			'check for the case where a space is after the photo year:  "2014 .JPG"
 			If fileNameTemp.Contains(_photoyearfile_withspace) Then
 				fileNameTemp = fileNameTemp.Replace(_photoyearfile_withspace, "").Trim()
+			End If
+
+			'final check for the ".jpg" presence in the filename
+			If fileNameTemp.Contains(".jpg") Then
+				fileNameTemp = fileNameTemp.Replace(".jpg", "").Trim()
 			End If
 
 			fileNameItems = fileNameTemp.Split(" ")
@@ -1082,7 +1119,13 @@ Public Class Form1
 				End If
 			Next
 			childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
-			childPhotoList.Add(childData)
+
+			'if there is not a C in the childlookupid then we can't use this one:
+			If childData.ChildLookupId.ToLower().StartsWith("c") Then
+				childPhotoList.Add(childData)
+			Else
+				_fileNameParseErrorList.ChildPhotoList.Add(childData)
+			End If
 		Next
 
 		Return childPhotoList
@@ -1096,11 +1139,14 @@ Public Class Form1
 		_alreadycompletedfoldername = My.Settings.ALREADYCOMPLETEDFOLDERNAME ' "Already_Completed_Exceptions\"
 		_unusablealreadycompletedfoldername = My.Settings.UNUSABLEALREADYCOMPLETEDFOLDERNAME ' "Unusable_Already_Completed_Exceptions\"
 		_interactionnotfoundfoldername = My.Settings.INTERACTIONNOTFOUNDFOLDERNAME ' "Interactions_Not_In_CRM_Exceptions\"
+		_fileNameParseErrorFolderName = My.Settings.FILENAMEPARSEERRORFOLDERNAME   ' "Filename_Parse_Error\"
 		_recordopname = My.Settings.RECORDOPNAME ' "Child Interaction Annual Photo Update Record Operation"	 ' "Completes Annual Photo Interactions Record Op"
 		_photoyearfile = My.Settings.PHOTOYEARFILE ' "2014.JPG"
 		_photoyearfile_lowercase = My.Settings.PHOTOYEARFILE_LOWERCASE	'"2014.jpg"
 		_photoyearfile_withspace = My.Settings.PHOTOYEARFILE_WITHSPACE	'"2014 .JPG"
 		_debugging = My.Settings.DEBUGGING
+
+
 
 		'these settings are environment specific:
 		If My.Settings.TARGET_ENVIRONMENT.ToLower().Equals("dev") Then
@@ -1197,8 +1243,13 @@ Public Class Form1
 			_unusableAlreadyCompletedList.ChildPhotoList.Clear()
 		End If
 
+		If Not _fileNameParseErrorList.ChildPhotoList Is Nothing Then
+			_fileNameParseErrorList.ChildPhotoList.Clear()
+		End If
+
 		'clear out the source folder textbox
 		Me.TextBox_SourceFolder.Text = String.Empty
+		Me.otherSourceText.Text = String.Empty
 
 		'clear out the listview
 		lvResults.Clear()

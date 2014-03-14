@@ -53,14 +53,17 @@
     <Setting Name="DEVUN" Type="System.String" Scope="Application">
       <Value Profile="(Default)">PhotoAPIUser21195D</Value>
     </Setting>
-    <Setting Name="DEVPW" Type="System.String" Scope="User">
+    <Setting Name="DEVPW" Type="System.String" Scope="Application">
       <Value Profile="(Default)">P@ssword1</Value>
     </Setting>
-    <Setting Name="PRODUN" Type="System.String" Scope="User">
+    <Setting Name="PRODUN" Type="System.String" Scope="Application">
       <Value Profile="(Default)">PhotoAPIUser21195P</Value>
     </Setting>
-    <Setting Name="PRODPW" Type="System.String" Scope="User">
+    <Setting Name="PRODPW" Type="System.String" Scope="Application">
       <Value Profile="(Default)">P@ssword1</Value>
+    </Setting>
+    <Setting Name="FILENAMEPARSEERRORFOLDERNAME" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">Filename_Parse_Error\</Value>
     </Setting>
   </Settings>
 </SettingsFile>
