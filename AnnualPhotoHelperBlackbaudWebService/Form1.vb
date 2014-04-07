@@ -493,7 +493,7 @@ Public Class Form1
 				'child is valid until proven otherwise
 				isChildValid = True
 				photoChild = photoFolderChildrenList.ChildPhotoList(index)
-				crmChild = crmChildList.ChildPhotoList.Where(Function(x) x.ChildLookupId.Equals(photoChild.ChildLookupId)).FirstOrDefault()
+				crmChild = crmChildList.ChildPhotoList.Where(Function(x) x.ChildLookupId.ToLower().Equals(photoChild.ChildLookupId.ToLower())).FirstOrDefault()
 
 				If Not crmChild Is Nothing Then					
 					'if user checked the override box, then skip the Name check
@@ -532,7 +532,7 @@ Public Class Form1
 					'check further if check above passed:
 					If isChildValid = True Then
 						'check project id
-						If Not photoChild.ChildProject.Equals(crmChild.ChildProject) Then
+						If Not photoChild.ChildProject.ToLower().Equals(crmChild.ChildProject.ToLower()) Then
 							_projectIdNotMatchList.ChildPhotoList.Add(photoChild)
 							isChildValid = False
 						End If
@@ -1099,9 +1099,14 @@ Public Class Form1
 				fileNameTemp = fileNameTemp.Replace(_photoyearfile_withspace, "").Trim()
 			End If
 
-			'final check for the ".jpg" presence in the filename
+			'check for the lowercase ".jpg" presence in the filename
 			If fileNameTemp.Contains(".jpg") Then
 				fileNameTemp = fileNameTemp.Replace(".jpg", "").Trim()
+			End If
+
+			'check for the uppercase ".JPG" presence in the filename
+			If fileNameTemp.Contains(".JPG") Then
+				fileNameTemp = fileNameTemp.Replace(".JPG", "").Trim()
 			End If
 
 			fileNameItems = fileNameTemp.Split(" ")
@@ -1122,6 +1127,8 @@ Public Class Form1
 
 			'if there is not a C in the childlookupid then we can't use this one:
 			If childData.ChildLookupId.ToLower().StartsWith("c") Then
+				'make sure the ChildLookup ID value starts with uppercase "C":
+				childData.ChildLookupId = childData.ChildLookupId.ToUpper()
 				childPhotoList.Add(childData)
 			Else
 				_fileNameParseErrorList.ChildPhotoList.Add(childData)
