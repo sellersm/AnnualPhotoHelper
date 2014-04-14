@@ -193,15 +193,6 @@ Namespace My
         
         <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
-         Global.System.Configuration.DefaultSettingValueAttribute("BBInfinity")>  _
-        Public ReadOnly Property PROD_DB() As String
-            Get
-                Return CType(Me("PROD_DB"),String)
-            End Get
-        End Property
-        
-        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
-         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("PhotoAPIUser21195D")>  _
         Public ReadOnly Property DEVUN() As String
             Get
@@ -242,6 +233,24 @@ Namespace My
         Public ReadOnly Property FILENAMEPARSEERRORFOLDERNAME() As String
             Get
                 Return CType(Me("FILENAMEPARSEERRORFOLDERNAME"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("21195P")>  _
+        Public ReadOnly Property PROD_DB() As String
+            Get
+                Return CType(Me("PROD_DB"),String)
+            End Get
+        End Property
+        
+        <Global.System.Configuration.ApplicationScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("Children_Validated\")>  _
+        Public ReadOnly Property VALIDATEDCHILDRENFOLDERNAME() As String
+            Get
+                Return CType(Me("VALIDATEDCHILDRENFOLDERNAME"),String)
             End Get
         End Property
     End Class

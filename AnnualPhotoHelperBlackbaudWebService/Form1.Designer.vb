@@ -43,24 +43,26 @@ Partial Class Form1
 		Me.emailRadioButton = New System.Windows.Forms.RadioButton()
 		Me.otherSourceText = New System.Windows.Forms.TextBox()
 		Me.otherLabel = New System.Windows.Forms.Label()
+		Me.lblFilenameParseErrors = New System.Windows.Forms.Label()
+		Me.lblAlreadyCompletedErrors = New System.Windows.Forms.Label()
 		Me.GroupBox1.SuspendLayout()
 		Me.SuspendLayout()
 		'
 		'lblEventsTitle
 		'
 		Me.lblEventsTitle.AutoSize = True
-		Me.lblEventsTitle.Location = New System.Drawing.Point(4, 270)
+		Me.lblEventsTitle.Location = New System.Drawing.Point(4, 324)
 		Me.lblEventsTitle.Name = "lblEventsTitle"
-		Me.lblEventsTitle.Size = New System.Drawing.Size(97, 13)
+		Me.lblEventsTitle.Size = New System.Drawing.Size(105, 13)
 		Me.lblEventsTitle.TabIndex = 0
-		Me.lblEventsTitle.Text = "Validated Chid List:"
+		Me.lblEventsTitle.Text = "# Children Validated:"
 		'
 		'lvResults
 		'
 		Me.lvResults.Dock = System.Windows.Forms.DockStyle.Bottom
-		Me.lvResults.Location = New System.Drawing.Point(0, 286)
+		Me.lvResults.Location = New System.Drawing.Point(0, 342)
 		Me.lvResults.Name = "lvResults"
-		Me.lvResults.Size = New System.Drawing.Size(694, 312)
+		Me.lvResults.Size = New System.Drawing.Size(694, 350)
 		Me.lvResults.TabIndex = 1
 		Me.lvResults.UseCompatibleStateImageBehavior = False
 		'
@@ -128,7 +130,7 @@ Partial Class Form1
 		'namesNotMatchOutputLabel
 		'
 		Me.namesNotMatchOutputLabel.AutoSize = True
-		Me.namesNotMatchOutputLabel.Location = New System.Drawing.Point(4, 212)
+		Me.namesNotMatchOutputLabel.Location = New System.Drawing.Point(4, 213)
 		Me.namesNotMatchOutputLabel.Name = "namesNotMatchOutputLabel"
 		Me.namesNotMatchOutputLabel.Size = New System.Drawing.Size(148, 13)
 		Me.namesNotMatchOutputLabel.TabIndex = 13
@@ -137,7 +139,7 @@ Partial Class Form1
 		'projectNotMatchOutputLabel
 		'
 		Me.projectNotMatchOutputLabel.AutoSize = True
-		Me.projectNotMatchOutputLabel.Location = New System.Drawing.Point(4, 230)
+		Me.projectNotMatchOutputLabel.Location = New System.Drawing.Point(4, 232)
 		Me.projectNotMatchOutputLabel.Name = "projectNotMatchOutputLabel"
 		Me.projectNotMatchOutputLabel.Size = New System.Drawing.Size(148, 13)
 		Me.projectNotMatchOutputLabel.TabIndex = 14
@@ -236,11 +238,31 @@ Partial Class Form1
 		Me.otherLabel.Text = "Other:"
 		Me.otherLabel.Visible = False
 		'
+		'lblFilenameParseErrors
+		'
+		Me.lblFilenameParseErrors.AutoSize = True
+		Me.lblFilenameParseErrors.Location = New System.Drawing.Point(4, 251)
+		Me.lblFilenameParseErrors.Name = "lblFilenameParseErrors"
+		Me.lblFilenameParseErrors.Size = New System.Drawing.Size(132, 13)
+		Me.lblFilenameParseErrors.TabIndex = 22
+		Me.lblFilenameParseErrors.Text = "Filename parse errors label"
+		'
+		'lblAlreadyCompletedErrors
+		'
+		Me.lblAlreadyCompletedErrors.AutoSize = True
+		Me.lblAlreadyCompletedErrors.Location = New System.Drawing.Point(4, 270)
+		Me.lblAlreadyCompletedErrors.Name = "lblAlreadyCompletedErrors"
+		Me.lblAlreadyCompletedErrors.Size = New System.Drawing.Size(148, 13)
+		Me.lblAlreadyCompletedErrors.TabIndex = 23
+		Me.lblAlreadyCompletedErrors.Text = "Already completed errors label"
+		'
 		'Form1
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-		Me.ClientSize = New System.Drawing.Size(694, 598)
+		Me.ClientSize = New System.Drawing.Size(694, 692)
+		Me.Controls.Add(Me.lblAlreadyCompletedErrors)
+		Me.Controls.Add(Me.lblFilenameParseErrors)
 		Me.Controls.Add(Me.otherLabel)
 		Me.Controls.Add(Me.otherSourceText)
 		Me.Controls.Add(Me.GroupBox1)
@@ -287,5 +309,7 @@ Partial Class Form1
 	Friend WithEvents emailRadioButton As System.Windows.Forms.RadioButton
 	Friend WithEvents otherSourceText As System.Windows.Forms.TextBox
 	Friend WithEvents otherLabel As System.Windows.Forms.Label
+	Friend WithEvents lblFilenameParseErrors As System.Windows.Forms.Label
+	Friend WithEvents lblAlreadyCompletedErrors As System.Windows.Forms.Label
 
 End Class

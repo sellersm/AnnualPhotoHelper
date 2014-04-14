@@ -55,6 +55,7 @@ Public Class Form1
 	Private _unusablealreadycompletedfoldername As String = "Unusable_Already_Completed_Exceptions\"
 	Private _interactionnotfoundfoldername As String = "Interactions_Not_In_CRM_Exceptions\"
 	Private _fileNameParseErrorFolderName As String = "Filename_Parse_Error\"
+	Private _completedFolderName As String = "Children_Validated\"
 
 	Private _recordopname As String = "Child Interaction Annual Photo Update Record Operation"	 ' "Completes Annual Photo Interactions Record Op"
 	Private _photoyearfile As String = "2014.JPG"
@@ -533,6 +534,8 @@ Public Class Form1
 					If isChildValid = True Then
 						'check project id
 						If Not photoChild.ChildProject.ToLower().Equals(crmChild.ChildProject.ToLower()) Then
+							'set the crm childname so it will be output
+							photoChild.CRMChildName = crmChild.CRMChildName
 							_projectIdNotMatchList.ChildPhotoList.Add(photoChild)
 							isChildValid = False
 						End If
@@ -589,6 +592,10 @@ Public Class Form1
 		Dim childData As New ChildPhotoData()
 		'Dim fileNameItems As String()
 		Dim dataCounter As Integer = 0
+
+		validatePhotosButton.Enabled = False
+
+		Dim isValidPhotos As Boolean = True
 
 		Try
 			'set the comment value based on which source radio button is checked:
@@ -650,20 +657,43 @@ Public Class Form1
 						projectNotMatchOutputLabel.Visible = True
 					End If
 
-					If _childValidatedList.ChildPhotoList.Count > 0 Then
-						CompleteInteractions()
-					Else
-						MsgBox("There are no valid children photos. No Interactions will be completed.")
+					'Memphis added 4/14/14
+					If _fileNameParseErrorList.ChildPhotoList.Count > 0 Then
+						lblFilenameParseErrors.Text = String.Format("{0} filename parse errors. Look here: {1}", _fileNameParseErrorList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & _fileNameParseErrorFolderName)
+						lblFilenameParseErrors.Visible = True
 					End If
 
-					CreateOutputOfComparison()
+					If _childValidatedList.ChildPhotoList.Count > 0 Then
+						CompleteInteractions()
+						'Memphis added 4/14/14
+						If _alreadyCompletedList.ChildPhotoList.Count > 0 Then
+							lblAlreadyCompletedErrors.Text = String.Format("{0} interactions already completed. Look here: {1}", _alreadyCompletedList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & _alreadycompletedfoldername)
+							lblAlreadyCompletedErrors.Visible = True
+						End If
+						'Memphis added 4/14/14: update the label to display count to user
+						lblEventsTitle.Text = String.Format("{0} Children Validated:", _childValidatedList.ChildPhotoList.Count)
 
-					allFiles = Nothing
-					dirinfo = Nothing
+						'Memphis 4/14/14: move the completed files to their own folder
+						If DoesOutputFolderExist(Me.TextBox_SourceFolder.Text & "\" & _completedFolderName) = False Then
+							CreateOutputFolder(_completedFolderName)
+						End If
+						WriteCollectionToOutputFolder(_childValidatedList, Me.TextBox_SourceFolder.Text & "\" & _completedFolderName, "ValidatedChildren.txt")
+						MoveExceptionPhotosToOutputFolder(Me.TextBox_SourceFolder.Text & "\" & _completedFolderName, _childValidatedList)
+					Else
+						MsgBox("There are no valid child photos. No Interactions will be completed.")
+						isValidPhotos = False
+					End If
 
-					MsgBox("Photos validated and Interactions should have been completed for the valid children.")
+					If isValidPhotos = True Then
+						CreateOutputOfComparison()
 
-					resetButton.Enabled = True
+						allFiles = Nothing
+						dirinfo = Nothing
+
+						MsgBox("Photos validated and Interactions should have been completed for the valid children.")
+					End If
+
+
 				Else
 					MsgBox("The folder entered (" & TextBox_SourceFolder.Text & ") does not exist.", MsgBoxStyle.Exclamation, "Folder Does Not Exist")
 				End If
@@ -674,6 +704,8 @@ Public Class Form1
 		Catch ex As Exception
 			MsgBox("An error occured: " & ex.Message & vbCrLf & "Source: " & ex.Source)
 
+		Finally
+			resetButton.Enabled = True
 		End Try
 
 	End Sub
@@ -845,6 +877,8 @@ Public Class Form1
 				ElseIf fileName.ToLower().Equals("interactionalreadycompleted.txt") Then
 					'output the completion date that came back from CRM
 					outfile.WriteLine(String.Format("{0}          {1}", child.PhotoFile, child.CompletionDate))
+				ElseIf fileName.ToLower().Equals("projectsdonotmatch.txt") Then
+					outfile.WriteLine(String.Format("{0}          {1}          {2}", child.ChildProject, child.ChildLookupId, child.CRMChildName))
 				Else
 					outfile.WriteLine(child.PhotoFile)
 				End If
@@ -1147,6 +1181,7 @@ Public Class Form1
 		_unusablealreadycompletedfoldername = My.Settings.UNUSABLEALREADYCOMPLETEDFOLDERNAME ' "Unusable_Already_Completed_Exceptions\"
 		_interactionnotfoundfoldername = My.Settings.INTERACTIONNOTFOUNDFOLDERNAME ' "Interactions_Not_In_CRM_Exceptions\"
 		_fileNameParseErrorFolderName = My.Settings.FILENAMEPARSEERRORFOLDERNAME   ' "Filename_Parse_Error\"
+		_completedFolderName = My.Settings.VALIDATEDCHILDRENFOLDERNAME
 		_recordopname = My.Settings.RECORDOPNAME ' "Child Interaction Annual Photo Update Record Operation"	 ' "Completes Annual Photo Interactions Record Op"
 		_photoyearfile = My.Settings.PHOTOYEARFILE ' "2014.JPG"
 		_photoyearfile_lowercase = My.Settings.PHOTOYEARFILE_LOWERCASE	'"2014.jpg"
@@ -1200,15 +1235,19 @@ Public Class Form1
 		'turn off reset button
 		resetButton.Enabled = False
 
+		'turn on the validation button
+		validatePhotosButton.Enabled = True
+
 		outputNotInCRMLabel.Visible = False
 		namesNotMatchOutputLabel.Visible = False
 		projectNotMatchOutputLabel.Visible = False
+		lblAlreadyCompletedErrors.Visible = False
+		lblFilenameParseErrors.Visible = False
 
 		ftpRadioButton.Checked = True
 		otherLabel.Visible = False
 		otherSourceText.Visible = False
 		nameValidationOverrideCheckBox.Checked = False
-
 
 		'this is passed into record operation and used for the insert into any photo interaction exceptions
 		If _debugging = True Then
@@ -1260,6 +1299,8 @@ Public Class Form1
 
 		'clear out the listview
 		lvResults.Clear()
+		lblEventsTitle.Text = String.Format("{0} Children Validated:", _childValidatedList.ChildPhotoList.Count)
+
 	End Sub
 
 	Private Sub resetButton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles resetButton.Click
