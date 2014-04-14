@@ -536,6 +536,8 @@ Public Class Form1
 						If Not photoChild.ChildProject.ToLower().Equals(crmChild.ChildProject.ToLower()) Then
 							'set the crm childname so it will be output
 							photoChild.CRMChildName = crmChild.CRMChildName
+							'set the crm project so it will be output
+							photoChild.ChildProject = crmChild.ChildProject
 							_projectIdNotMatchList.ChildPhotoList.Add(photoChild)
 							isChildValid = False
 						End If
@@ -878,7 +880,7 @@ Public Class Form1
 					'output the completion date that came back from CRM
 					outfile.WriteLine(String.Format("{0}          {1}", child.PhotoFile, child.CompletionDate))
 				ElseIf fileName.ToLower().Equals("projectsdonotmatch.txt") Then
-					outfile.WriteLine(String.Format("{0}          {1}          {2}", child.ChildProject, child.ChildLookupId, child.CRMChildName))
+					outfile.WriteLine(String.Format("{0}          {1}          {2}          {3}", child.PhotoFile, child.ChildProject, child.ChildLookupId, child.CRMChildName))
 				Else
 					outfile.WriteLine(child.PhotoFile)
 				End If
