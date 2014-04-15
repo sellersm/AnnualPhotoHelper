@@ -645,23 +645,23 @@ Public Class Form1
 
 					'display labels that will list a count, if any, of exceptions and where to find them:
 					If _notInCrmList.ChildPhotoList.Count > 0 Then
-						outputNotInCRMLabel.Text = String.Format("{0} children were not found in CRM. Look here: {1}", _notInCrmList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & _notincrmfoldername)
+						outputNotInCRMLabel.Text = String.Format("{0} children were not found in CRM. Look here: {1}", _notInCrmList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & "\" & _notincrmfoldername)
 						outputNotInCRMLabel.Visible = True
 					End If
 
 					If _nameNotMatchList.ChildPhotoList.Count > 0 Then
-						namesNotMatchOutputLabel.Text = String.Format("{0} names do not match CRM. Look here: {1}", _nameNotMatchList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & _unmatchednamefoldername)
+						namesNotMatchOutputLabel.Text = String.Format("{0} names do not match CRM. Look here: {1}", _nameNotMatchList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & "\" & _unmatchednamefoldername)
 						namesNotMatchOutputLabel.Visible = True
 					End If
 
 					If _projectIdNotMatchList.ChildPhotoList.Count > 0 Then
-						projectNotMatchOutputLabel.Text = String.Format("{0} projects do not match CRM. Look here: {1}", _projectIdNotMatchList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & _unmatchedprojectfoldername)
+						projectNotMatchOutputLabel.Text = String.Format("{0} projects do not match CRM. Look here: {1}", _projectIdNotMatchList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & "\" & _unmatchedprojectfoldername)
 						projectNotMatchOutputLabel.Visible = True
 					End If
 
 					'Memphis added 4/14/14
 					If _fileNameParseErrorList.ChildPhotoList.Count > 0 Then
-						lblFilenameParseErrors.Text = String.Format("{0} filename parse errors. Look here: {1}", _fileNameParseErrorList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & _fileNameParseErrorFolderName)
+						lblFilenameParseErrors.Text = String.Format("{0} filename parse errors. Look here: {1}", _fileNameParseErrorList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & "\" & _fileNameParseErrorFolderName)
 						lblFilenameParseErrors.Visible = True
 					End If
 
@@ -669,18 +669,20 @@ Public Class Form1
 						CompleteInteractions()
 						'Memphis added 4/14/14
 						If _alreadyCompletedList.ChildPhotoList.Count > 0 Then
-							lblAlreadyCompletedErrors.Text = String.Format("{0} interactions already completed. Look here: {1}", _alreadyCompletedList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & _alreadycompletedfoldername)
+							lblAlreadyCompletedErrors.Text = String.Format("{0} interactions already completed. Look here: {1}", _alreadyCompletedList.ChildPhotoList.Count, Me.TextBox_SourceFolder.Text & "\" & _alreadycompletedfoldername)
 							lblAlreadyCompletedErrors.Visible = True
 						End If
 						'Memphis added 4/14/14: update the label to display count to user
 						lblEventsTitle.Text = String.Format("{0} Children Validated:", _childValidatedList.ChildPhotoList.Count)
 
 						'Memphis 4/14/14: move the completed files to their own folder
-						If DoesOutputFolderExist(Me.TextBox_SourceFolder.Text & "\" & _completedFolderName) = False Then
-							CreateOutputFolder(_completedFolderName)
+						If _childValidatedList.ChildPhotoList.Count > 0 Then
+							If DoesOutputFolderExist(Me.TextBox_SourceFolder.Text & "\" & _completedFolderName) = False Then
+								CreateOutputFolder(_completedFolderName)
+							End If
+							WriteCollectionToOutputFolder(_childValidatedList, Me.TextBox_SourceFolder.Text & "\" & _completedFolderName, "ValidatedChildren.txt")
+							MoveExceptionPhotosToOutputFolder(Me.TextBox_SourceFolder.Text & "\" & _completedFolderName, _childValidatedList)
 						End If
-						WriteCollectionToOutputFolder(_childValidatedList, Me.TextBox_SourceFolder.Text & "\" & _completedFolderName, "ValidatedChildren.txt")
-						MoveExceptionPhotosToOutputFolder(Me.TextBox_SourceFolder.Text & "\" & _completedFolderName, _childValidatedList)
 					Else
 						MsgBox("There are no valid child photos. No Interactions will be completed.")
 						isValidPhotos = False
