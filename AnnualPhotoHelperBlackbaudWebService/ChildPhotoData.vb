@@ -10,6 +10,11 @@
 	Private _fileName As String
 	'Private _lastName As String
 	Private _completionDate As Date
+	Private _fileLastName As String
+	Private _fileFirstName As String
+	Private _crmLastName As String
+	Private _crmFirstName As String
+
 
 	<XmlElement(ElementName:="CHILDLOOKUPID")>
 	Public Property ChildLookupId() As String
@@ -66,6 +71,42 @@
 		End Set
 	End Property
 
+	Public Property CRMFirstName() As String
+		Get
+			Return _crmFirstName
+		End Get
+		Set(ByVal value As String)
+			_crmFirstName = value
+		End Set
+	End Property
+
+	Public Property CRMLastName() As String
+		Get
+			Return _crmLastName
+		End Get
+		Set(ByVal value As String)
+			_crmLastName = value
+		End Set
+	End Property
+
+	Public Property FileFirstName() As String
+		Get
+			Return _fileFirstName
+		End Get
+		Set(ByVal value As String)
+			_fileFirstName = value
+		End Set
+	End Property
+
+	Public Property FileLastName() As String
+		Get
+			Return _fileLastName
+		End Get
+		Set(ByVal value As String)
+			_fileLastName = value
+		End Set
+	End Property
+
 	Public Property CompletionDate() As Date
 		Get
 			Return _completionDate
@@ -80,6 +121,10 @@
 		_childLookupId = lookupid
 		_childProject = project
 		_childName = childName
+		_crmFirstName = String.Empty
+		_crmLastName = String.Empty
+		_fileFirstName = String.Empty
+		_fileLastName = String.Empty
 	End Sub
 
 	Public Sub New(ByVal lookupid As String, ByVal project As String, ByVal childName As String, ByVal fileName As String)
@@ -87,6 +132,10 @@
 		_childProject = project
 		_childName = childName
 		_fileName = fileName
+		_crmFirstName = String.Empty
+		_crmLastName = String.Empty
+		_fileFirstName = String.Empty
+		_fileLastName = String.Empty
 	End Sub
 
 	Public Sub New(ByVal lookupid As String, ByVal project As String, ByVal childName As String, ByVal fileName As String, ByVal crmChildName As String)
@@ -95,6 +144,10 @@
 		_childName = childName
 		_fileName = fileName
 		_crmName = crmChildName
+		_crmFirstName = String.Empty
+		_crmLastName = String.Empty
+		_fileFirstName = String.Empty
+		_fileLastName = String.Empty
 	End Sub
 
 
@@ -105,6 +158,10 @@
 		_fileName = String.Empty
 		_crmName = String.Empty
 		_completionDate = Nothing
+		_crmFirstName = String.Empty
+		_crmLastName = String.Empty
+		_fileFirstName = String.Empty
+		_fileLastName = String.Empty
 	End Sub
 
 	Public Function CompareTo(ByVal obj As Object) As Integer Implements System.IComparable.CompareTo

@@ -67,13 +67,10 @@ Public Class Form1
 	Private _appFxURL As String = String.Empty
 #End Region
 
-
-
 	Private Sub Form1_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
 		InitializeEverything()
 		resetButton.Enabled = False
 	End Sub
-
 
 	Private Sub InitializeAppFxWebService()
 
@@ -458,14 +455,16 @@ Public Class Form1
 		Dim childProject As String = String.Empty
 		Dim childName As String = String.Empty
 		Dim isChildValid As Boolean = True
+		Dim crmFirstName As String = String.Empty
+		Dim crmLastName As String = String.Empty
 
 		'these are used for soundex-type Name comparisons
 		Dim crmMphone As New DoubleMetaphone()
 		Dim fileMphone As New DoubleMetaphone()
 		Dim crmSoundex As New Soundex.Soundex()
 		Dim fileSoundex As New Soundex.Soundex()
-		Dim crmNameSoundex As String
-		Dim fileNameSoundex As String
+		'Dim crmNameSoundex As String
+		'Dim fileNameSoundex As String
 
 		_nameNotMatchList = New ChildPhotoCollection()
 		_notInCrmList = New ChildPhotoCollection()
@@ -485,8 +484,6 @@ Public Class Form1
 			'iterate through the list of kids from photo folder, checking one-by-one against the kids returned from CRM
 			Dim index As Integer = 0
 
-			'??? Should I validate that the childlookupid begins with "C"?  If not, what should I do?
-
 			'search the crm list for this child
 			'if found, set the properties to variables
 			'compare variables to the photo folder child we're working with
@@ -495,38 +492,91 @@ Public Class Form1
 				isChildValid = True
 				photoChild = photoFolderChildrenList.ChildPhotoList(index)
 				crmChild = crmChildList.ChildPhotoList.Where(Function(x) x.ChildLookupId.ToLower().Equals(photoChild.ChildLookupId.ToLower())).FirstOrDefault()
+				crmFirstName = String.Empty
+				crmLastName = String.Empty
 
-				If Not crmChild Is Nothing Then					
+				If Not crmChild Is Nothing Then
 					'if user checked the override box, then skip the Name check
 					If nameValidationOverrideCheckBox.Checked = False Then
-						If Not photoChild.ChildName.ToLower().Equals(crmChild.ChildName.ToLower()) Then
-							'try a soundex to see if the names are really the same
-							crmNameSoundex = crmSoundex.GetSoundex(crmChild.ChildName.ToLower())
-							fileNameSoundex = fileSoundex.GetSoundex(photoChild.ChildName.ToLower())
-							If Not crmNameSoundex.Equals(fileNameSoundex) Then
-								'use the DoubleMetaphone class to generate the keys & then compare
-								crmMphone.computeKeys(crmChild.ChildName.ToLower())
-								fileMphone.computeKeys(photoChild.ChildName.ToLower())
+						'populate the crmFirstName and crmLastName values
+						If (Not crmChild.ChildName Is Nothing) AndAlso crmChild.ChildName.Contains(".") Then
+							crmFirstName = crmChild.ChildName.ToString().Substring(0, crmChild.ChildName.IndexOf(".") - 1)
+							crmLastName = crmChild.ChildName.ToString().Substring(crmChild.ChildName.IndexOf(".") - 1)
+						Else
+							'separate the names without the period after middle name using RegEx
+							'Dim s As String = RegularExpressions.Regex.Replace("ThisIsMyCapsDelimitedString", "([A-Z])", " $1")
+							Dim crmChildNameRegEx As String = RegularExpressions.Regex.Replace(crmChild.ChildName, "([A-Z])", " $1").Trim()
+							Dim childNameItems As String() = crmChildNameRegEx.Split(" ")
+							If childNameItems.Count > 0 Then
+								crmFirstName = childNameItems(0) 'firstName
+								crmLastName = childNameItems(1)	 'lastname
+							End If
+						End If
 
+						'first check if the names match at all at a string level:
+						If Not photoChild.ChildName.ToLower().Equals(crmChild.ChildName.ToLower()) Then
+							'names string values don't match, so do the metaphone check in case they're very close
+							'use the DoubleMetaphone class to generate the keys & then compare the first and last names respectively
+							'check the 1st names first:
+							crmMphone.computeKeys(crmFirstName.ToLower())
+							fileMphone.computeKeys(photoChild.FileFirstName.ToLower())
+							If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
+								'don't match at all:
+								photoChild.CRMChildName = crmChild.CRMChildName
+								_nameNotMatchList.ChildPhotoList.Add(photoChild)
+								isChildValid = False
+							End If
+
+							If isChildValid = True Then
+								'check the 2nd names next:
+								crmMphone.computeKeys(crmLastName.ToLower())
+								fileMphone.computeKeys(photoChild.FileLastName.ToLower())
 								If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
-									'last resort, check the primary key value:
-									If (Not String.IsNullOrEmpty(crmMphone.AlternateKey) AndAlso Not String.IsNullOrEmpty(fileMphone.AlternateKey)) Then
-										If Not crmMphone.AlternateKey.Equals(fileMphone.AlternateKey) Then
-											'just doesn't match!
-											'set the crm childname so it will be output
-											photoChild.CRMChildName = crmChild.CRMChildName
-											_nameNotMatchList.ChildPhotoList.Add(photoChild)
-											isChildValid = False
-										End If
-									Else
-										'just doesn't match!
-										'set the crm childname so it will be output
-										photoChild.CRMChildName = crmChild.CRMChildName
-										_nameNotMatchList.ChildPhotoList.Add(photoChild)
-										isChildValid = False
-									End If
+									'don't match at all:
+									photoChild.CRMChildName = crmChild.CRMChildName
+									_nameNotMatchList.ChildPhotoList.Add(photoChild)
+									isChildValid = False
+
+									'last resort, check the compare:
+									'If Not String.Compare(crmChild.ChildName.ToLower(), photoChild.ChildName.ToLower()) = 0 Then
+									'	photoChild.CRMChildName = crmChild.CRMChildName
+									'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
+									'	isChildValid = False
+									'End If
+
+									'If (Not String.IsNullOrEmpty(crmMphone.AlternateKey) AndAlso Not String.IsNullOrEmpty(fileMphone.AlternateKey)) Then
+									'	If Not crmMphone.AlternateKey.Equals(fileMphone.AlternateKey) Then
+									'		'just doesn't match!
+									'		'set the crm childname so it will be output
+									'		photoChild.CRMChildName = crmChild.CRMChildName
+									'		_nameNotMatchList.ChildPhotoList.Add(photoChild)
+									'		isChildValid = False
+									'	End If
+									'Else
+									'	'just doesn't match!
+									'	'set the crm childname so it will be output
+									'	photoChild.CRMChildName = crmChild.CRMChildName
+									'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
+									'	isChildValid = False
+									'End If
 								End If
 							End If
+
+							' Memphis 5/6/14: skipping the soundex as it doesn't seem to work
+							'try a soundex to see if the names are really the same
+							'crmNameSoundex = crmSoundex.GetSoundex(crmChild.ChildName.ToLower())
+							'fileNameSoundex = fileSoundex.GetSoundex(photoChild.ChildName.ToLower())
+							'' consider using the Compare, because the soundex values may equal:
+							''Dim compareVal As Integer = crmNameSoundex.Compare(crmChild.ChildName.ToLower(), photoChild.ChildName.ToLower())
+							'If Not String.Compare(crmChild.ChildName.ToLower(), photoChild.ChildName.ToLower()) = 0 Then
+							'	photoChild.CRMChildName = crmChild.CRMChildName
+							'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
+							'	isChildValid = False
+							'End If
+							'If isChildValid = True Then
+							'	If Not crmNameSoundex.Equals(fileNameSoundex) Then
+							'	End If
+							'End If
 						End If
 					End If
 
@@ -1153,12 +1203,16 @@ Public Class Form1
 			childData.ChildProject = fileNameItems(0)
 			childData.ChildLookupId = fileNameItems(1)
 			childData.PhotoFile = fl.Name
+			childData.FileFirstName = fileNameItems(2)
 
 			'concatenate the names values
 			Dim nameBuilder As StringBuilder = New StringBuilder()
 			For fileCounter = 2 To dataCounter
 				If Not fileNameItems(fileCounter).ToLower().Contains("copy") Then
 					nameBuilder.Append(fileNameItems(fileCounter))
+				End If
+				If fileCounter = 3 Then
+					childData.FileLastName = fileNameItems(fileCounter)
 				End If
 			Next
 			childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
