@@ -738,15 +738,13 @@ Public Class Form1
 						isValidPhotos = False
 					End If
 
-					If isValidPhotos = True Then
-						CreateOutputOfComparison()
+					CreateOutputOfComparison()
 
+					If isValidPhotos = True Then
 						allFiles = Nothing
 						dirinfo = Nothing
-
 						MsgBox("Photos validated and Interactions should have been completed for the valid children.")
 					End If
-
 
 				Else
 					MsgBox("The folder entered (" & TextBox_SourceFolder.Text & ") does not exist.", MsgBoxStyle.Exclamation, "Folder Does Not Exist")
