@@ -1172,62 +1172,87 @@ Public Class Form1
 		Dim fileNameTemp As String = String.Empty
 
 		For Each fl As FileInfo In allFiles
-			'populate collection of ChildPhotoData objects from filenames
-			fileNameTemp = fl.Name.Replace(_photoyearfile, "").Trim()
+			'Memphis 5/13/14: ensure that the filename doesn't have multiple dashes in it
+			'                 should only be 1 in the project ID, here's a bad example: 
+			'                 DO-105-C228353-Vanessa Martinez.JPG
 
-			'check for the lowercase extension
-			If fileNameTemp.Contains(_photoyearfile_lowercase) Then
-				fileNameTemp = fileNameTemp.Replace(_photoyearfile_lowercase, "").Trim()
-			End If
+			If CountCharacter(fl.ToString(), "-") = 1 Then
+				'populate collection of ChildPhotoData objects from filenames
+				fileNameTemp = fl.Name.Replace(_photoyearfile, "").Trim()
 
-			'check for the case where a space is after the photo year:  "2014 .JPG"
-			If fileNameTemp.Contains(_photoyearfile_withspace) Then
-				fileNameTemp = fileNameTemp.Replace(_photoyearfile_withspace, "").Trim()
-			End If
-
-			'check for the lowercase ".jpg" presence in the filename
-			If fileNameTemp.Contains(".jpg") Then
-				fileNameTemp = fileNameTemp.Replace(".jpg", "").Trim()
-			End If
-
-			'check for the uppercase ".JPG" presence in the filename
-			If fileNameTemp.Contains(".JPG") Then
-				fileNameTemp = fileNameTemp.Replace(".JPG", "").Trim()
-			End If
-
-			fileNameItems = fileNameTemp.Split(" ")
-			dataCounter = fileNameItems.Count - 1
-			childData = New ChildPhotoData()  'lookupid, projectid, name
-			childData.ChildProject = fileNameItems(0)
-			childData.ChildLookupId = fileNameItems(1)
-			childData.PhotoFile = fl.Name
-			childData.FileFirstName = fileNameItems(2)
-
-			'concatenate the names values
-			Dim nameBuilder As StringBuilder = New StringBuilder()
-			For fileCounter = 2 To dataCounter
-				If Not fileNameItems(fileCounter).ToLower().Contains("copy") Then
-					nameBuilder.Append(fileNameItems(fileCounter))
+				'check for the lowercase extension
+				If fileNameTemp.Contains(_photoyearfile_lowercase) Then
+					fileNameTemp = fileNameTemp.Replace(_photoyearfile_lowercase, "").Trim()
 				End If
-				If fileCounter = 3 Then
-					childData.FileLastName = fileNameItems(fileCounter)
-				End If
-			Next
-			childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
 
-			'if there is not a C in the childlookupid then we can't use this one:
-			If childData.ChildLookupId.ToLower().StartsWith("c") Then
-				'make sure the ChildLookup ID value starts with uppercase "C":
-				childData.ChildLookupId = childData.ChildLookupId.ToUpper()
-				childPhotoList.Add(childData)
+				'check for the case where a space is after the photo year:  "2014 .JPG"
+				If fileNameTemp.Contains(_photoyearfile_withspace) Then
+					fileNameTemp = fileNameTemp.Replace(_photoyearfile_withspace, "").Trim()
+				End If
+
+				'check for the lowercase ".jpg" presence in the filename
+				If fileNameTemp.Contains(".jpg") Then
+					fileNameTemp = fileNameTemp.Replace(".jpg", "").Trim()
+				End If
+
+				'check for the uppercase ".JPG" presence in the filename
+				If fileNameTemp.Contains(".JPG") Then
+					fileNameTemp = fileNameTemp.Replace(".JPG", "").Trim()
+				End If
+
+				fileNameItems = fileNameTemp.Split(" ")
+				dataCounter = fileNameItems.Count - 1
+				childData = New ChildPhotoData()  'lookupid, projectid, name
+				childData.ChildProject = fileNameItems(0)
+				childData.ChildLookupId = fileNameItems(1)
+				childData.PhotoFile = fl.Name
+				childData.FileFirstName = fileNameItems(2)
+
+				'concatenate the names values
+				Dim nameBuilder As StringBuilder = New StringBuilder()
+				For fileCounter = 2 To dataCounter
+					If Not fileNameItems(fileCounter).ToLower().Contains("copy") Then
+						nameBuilder.Append(fileNameItems(fileCounter))
+					End If
+					If fileCounter = 3 Then
+						childData.FileLastName = fileNameItems(fileCounter)
+					End If
+				Next
+				childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
+
+				'if there is not a C in the childlookupid then we can't use this one:
+				If childData.ChildLookupId.ToLower().StartsWith("c") Then
+					'make sure the ChildLookup ID value starts with uppercase "C":
+					childData.ChildLookupId = childData.ChildLookupId.ToUpper()
+					childPhotoList.Add(childData)
+				Else
+					_fileNameParseErrorList.ChildPhotoList.Add(childData)
+				End If
 			Else
+				'file is no good, throw it out...
+				childData = New ChildPhotoData()  'lookupid, projectid, name
+				childData.PhotoFile = fl.Name
 				_fileNameParseErrorList.ChildPhotoList.Add(childData)
 			End If
+
 		Next
 
 		Return childPhotoList
 
 	End Function
+
+	''' <summary>
+	''' This will count the number of characters in the given string.
+	''' </summary>
+	''' <param name="value"></param>
+	''' <param name="ch"></param>
+	''' <returns></returns>
+	''' <remarks></remarks>
+	Private Function CountCharacter(ByVal value As String, ByVal ch As Char) As Integer
+		Return value.Count(Function(c As Char) c = ch)
+		'value.Count(Function(c) c = "$"c)
+	End Function
+
 
 	Private Sub GetSetConfigSettingsValues()
 		_notincrmfoldername = My.Settings.NOTINCRMFOLDERNAME  ' "Children_Not_In_CRM\"
