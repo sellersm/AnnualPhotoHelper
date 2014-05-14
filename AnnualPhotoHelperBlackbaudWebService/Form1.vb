@@ -1170,13 +1170,33 @@ Public Class Form1
 		Dim fileNameItems As String()
 		Dim dataCounter As Integer = 0
 		Dim fileNameTemp As String = String.Empty
+		Dim isValidToParse As Boolean = True
 
 		For Each fl As FileInfo In allFiles
 			'Memphis 5/13/14: ensure that the filename doesn't have multiple dashes in it
 			'                 should only be 1 in the project ID, here's a bad example: 
 			'                 DO-105-C228353-Vanessa Martinez.JPG
+			'Memphis 5/14/14: need to account for dashes in the name as well, either first or last
+			'	HT-004 C232587 Walnise Saint-Fleur.JPG
+			'	HT-004 C318492 Roovelt Jean-Baptiste.JPG
+			'	HT-004 C318493 Richelson Jean-Baptiste.JPG
+			'	HT-004 C318501 Rose-Andrelle Gabrielle.JPG
+			'	HT-004 C318738 Phendy Bien-Aime.JPG
+			'	HT-004 C319230 Louse-Kenia Fonrose.JPG
+			' to accomplish this, just check the first 16 characters, which should encompass the project id, childid and first letter of first name:
+			'	HT-004 C319230 L
 
-			If CountCharacter(fl.ToString(), "-") = 1 Then
+			'Memphis 5/14/14:  in order for this to work, I must verify that there's a dash in the Project ID value
+			'                  so check for a dash in the first 5 characters, if not, throw it out:
+			If CountCharacter(fl.ToString().Substring(0, 5), "-") < 1 Then
+				'no good, can't continue because all the dash and file field parse counts will be off:
+				isValidToParse = False
+			Else
+				'need to reset this flag since we're in a loop and it could stay false incorrectly
+				isValidToParse = True
+			End If
+
+			If isValidToParse = True AndAlso CountCharacter(fl.ToString().Substring(0, 16), "-") = 1 Then
 				'populate collection of ChildPhotoData objects from filenames
 				fileNameTemp = fl.Name.Replace(_photoyearfile, "").Trim()
 
