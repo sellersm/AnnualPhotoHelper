@@ -45,7 +45,11 @@ Partial Class Form1
 		Me.otherLabel = New System.Windows.Forms.Label()
 		Me.lblFilenameParseErrors = New System.Windows.Forms.Label()
 		Me.lblAlreadyCompletedErrors = New System.Windows.Forms.Label()
+		Me.TrackBar1 = New System.Windows.Forms.TrackBar()
+		Me.Label3 = New System.Windows.Forms.Label()
+		Me.Label4 = New System.Windows.Forms.Label()
 		Me.GroupBox1.SuspendLayout()
+		CType(Me.TrackBar1, System.ComponentModel.ISupportInitialize).BeginInit()
 		Me.SuspendLayout()
 		'
 		'lblEventsTitle
@@ -62,7 +66,7 @@ Partial Class Form1
 		Me.lvResults.Dock = System.Windows.Forms.DockStyle.Bottom
 		Me.lvResults.Location = New System.Drawing.Point(0, 342)
 		Me.lvResults.Name = "lvResults"
-		Me.lvResults.Size = New System.Drawing.Size(694, 350)
+		Me.lvResults.Size = New System.Drawing.Size(775, 350)
 		Me.lvResults.TabIndex = 1
 		Me.lvResults.UseCompatibleStateImageBehavior = False
 		'
@@ -78,7 +82,7 @@ Partial Class Form1
 		'
 		'Button_GetSourceFolder
 		'
-		Me.Button_GetSourceFolder.Location = New System.Drawing.Point(498, 107)
+		Me.Button_GetSourceFolder.Location = New System.Drawing.Point(440, 106)
 		Me.Button_GetSourceFolder.Name = "Button_GetSourceFolder"
 		Me.Button_GetSourceFolder.Size = New System.Drawing.Size(28, 20)
 		Me.Button_GetSourceFolder.TabIndex = 7
@@ -89,7 +93,7 @@ Partial Class Form1
 		'
 		Me.TextBox_SourceFolder.Location = New System.Drawing.Point(5, 107)
 		Me.TextBox_SourceFolder.Name = "TextBox_SourceFolder"
-		Me.TextBox_SourceFolder.Size = New System.Drawing.Size(487, 20)
+		Me.TextBox_SourceFolder.Size = New System.Drawing.Size(429, 20)
 		Me.TextBox_SourceFolder.TabIndex = 6
 		'
 		'validatePhotosButton
@@ -157,7 +161,7 @@ Partial Class Form1
 		'
 		'resetButton
 		'
-		Me.resetButton.Location = New System.Drawing.Point(224, 133)
+		Me.resetButton.Location = New System.Drawing.Point(297, 133)
 		Me.resetButton.Name = "resetButton"
 		Me.resetButton.Size = New System.Drawing.Size(137, 23)
 		Me.resetButton.TabIndex = 16
@@ -167,7 +171,7 @@ Partial Class Form1
 		'environmentLabel
 		'
 		Me.environmentLabel.AutoSize = True
-		Me.environmentLabel.Location = New System.Drawing.Point(564, 9)
+		Me.environmentLabel.Location = New System.Drawing.Point(314, 90)
 		Me.environmentLabel.Name = "environmentLabel"
 		Me.environmentLabel.Size = New System.Drawing.Size(130, 13)
 		Me.environmentLabel.TabIndex = 17
@@ -222,16 +226,16 @@ Partial Class Form1
 		'
 		'otherSourceText
 		'
-		Me.otherSourceText.Location = New System.Drawing.Point(317, 59)
+		Me.otherSourceText.Location = New System.Drawing.Point(310, 59)
 		Me.otherSourceText.Name = "otherSourceText"
-		Me.otherSourceText.Size = New System.Drawing.Size(247, 20)
+		Me.otherSourceText.Size = New System.Drawing.Size(151, 20)
 		Me.otherSourceText.TabIndex = 20
 		Me.otherSourceText.Visible = False
 		'
 		'otherLabel
 		'
 		Me.otherLabel.AutoSize = True
-		Me.otherLabel.Location = New System.Drawing.Point(317, 39)
+		Me.otherLabel.Location = New System.Drawing.Point(310, 39)
 		Me.otherLabel.Name = "otherLabel"
 		Me.otherLabel.Size = New System.Drawing.Size(36, 13)
 		Me.otherLabel.TabIndex = 21
@@ -256,11 +260,41 @@ Partial Class Form1
 		Me.lblAlreadyCompletedErrors.TabIndex = 23
 		Me.lblAlreadyCompletedErrors.Text = "Already completed errors label"
 		'
+		'TrackBar1
+		'
+		Me.TrackBar1.LargeChange = 1
+		Me.TrackBar1.Location = New System.Drawing.Point(532, 7)
+		Me.TrackBar1.Maximum = 2
+		Me.TrackBar1.Name = "TrackBar1"
+		Me.TrackBar1.Size = New System.Drawing.Size(104, 45)
+		Me.TrackBar1.TabIndex = 24
+		'
+		'Label3
+		'
+		Me.Label3.AutoSize = True
+		Me.Label3.Location = New System.Drawing.Point(474, 16)
+		Me.Label3.Name = "Label3"
+		Me.Label3.Size = New System.Drawing.Size(56, 13)
+		Me.Label3.TabIndex = 25
+		Me.Label3.Text = "Less Strict"
+		'
+		'Label4
+		'
+		Me.Label4.AutoSize = True
+		Me.Label4.Location = New System.Drawing.Point(642, 16)
+		Me.Label4.Name = "Label4"
+		Me.Label4.Size = New System.Drawing.Size(58, 13)
+		Me.Label4.TabIndex = 26
+		Me.Label4.Text = "More Strict"
+		'
 		'Form1
 		'
 		Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
 		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-		Me.ClientSize = New System.Drawing.Size(694, 692)
+		Me.ClientSize = New System.Drawing.Size(775, 692)
+		Me.Controls.Add(Me.Label4)
+		Me.Controls.Add(Me.Label3)
+		Me.Controls.Add(Me.TrackBar1)
 		Me.Controls.Add(Me.lblAlreadyCompletedErrors)
 		Me.Controls.Add(Me.lblFilenameParseErrors)
 		Me.Controls.Add(Me.otherLabel)
@@ -284,6 +318,7 @@ Partial Class Form1
 		Me.Text = "Annual Photo Helper"
 		Me.GroupBox1.ResumeLayout(False)
 		Me.GroupBox1.PerformLayout()
+		CType(Me.TrackBar1, System.ComponentModel.ISupportInitialize).EndInit()
 		Me.ResumeLayout(False)
 		Me.PerformLayout()
 
@@ -311,5 +346,8 @@ Partial Class Form1
 	Friend WithEvents otherLabel As System.Windows.Forms.Label
 	Friend WithEvents lblFilenameParseErrors As System.Windows.Forms.Label
 	Friend WithEvents lblAlreadyCompletedErrors As System.Windows.Forms.Label
+	Friend WithEvents TrackBar1 As System.Windows.Forms.TrackBar
+	Friend WithEvents Label3 As System.Windows.Forms.Label
+	Friend WithEvents Label4 As System.Windows.Forms.Label
 
 End Class
