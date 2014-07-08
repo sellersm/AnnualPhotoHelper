@@ -14,7 +14,16 @@
 	Private _fileFirstName As String
 	Private _crmLastName As String
 	Private _crmFirstName As String
+	Private _hasMiddleInitial As Boolean
 
+	Public Property HasMiddleInitial() As Boolean
+		Get
+			Return _hasMiddleInitial
+		End Get
+		Set(ByVal value As Boolean)
+			_hasMiddleInitial = value
+		End Set
+	End Property
 
 	<XmlElement(ElementName:="CHILDLOOKUPID")>
 	Public Property ChildLookupId() As String
@@ -146,6 +155,18 @@
 		_crmName = crmChildName
 		_crmFirstName = String.Empty
 		_crmLastName = String.Empty
+		_fileFirstName = String.Empty
+		_fileLastName = String.Empty
+	End Sub
+
+	Public Sub New(ByVal lookupid As String, ByVal project As String, ByVal childName As String, ByVal fileName As String, ByVal crmChildName As String, ByVal firstName As String, ByVal lastName As String)
+		_childLookupId = lookupid
+		_childProject = project
+		_childName = childName
+		_fileName = fileName
+		_crmName = crmChildName
+		_crmFirstName = firstName
+		_crmLastName = lastName
 		_fileFirstName = String.Empty
 		_fileLastName = String.Empty
 	End Sub

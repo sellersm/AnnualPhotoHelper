@@ -6,6 +6,7 @@ Imports System.Xml.Serialization
 Imports System.Text.RegularExpressions
 Imports System.IO
 Imports nullpointer.Metaphone
+Imports NameComparisonUtility
 
 Public Class Form1
 
@@ -40,6 +41,19 @@ Public Class Form1
 	Private _interactionNotFoundList As New ChildPhotoCollection
 	Private _unusableAlreadyCompletedList As New ChildPhotoCollection
 	Private _fileNameParseErrorList As New ChildPhotoCollection
+
+	'these threshold values for the strictness slider values used for comparing against the JW Proximity and DL Distance:
+	Dim _jwProximityLow As Double = 0.7D
+	Dim _jwProximityMedium As Double = 0.8D
+	Dim _jwProximityHigh As Double = 0.875D
+
+	Dim _dlDistanceLow As Integer = 4
+	Dim _dlDistanceMedium As Integer = 3
+	Dim _dlDistanceHigh As Integer = 1
+
+	Dim _jwProximityThreshold As Double
+	Dim _dlDistanceThreshold As Integer
+
 
 	'****** DEBUGGING USE ONLY!  *****
 	' Set from the Config file (My.Settings):
@@ -131,125 +145,6 @@ Public Class Form1
 		End Try
 	End Sub
 
-	'Private Function GetNetworkCredentials() As System.Net.ICredentials
-
-	'	Dim securelyStoredUserName, securelyStoredPassword As String
-	'	'BBIS brushtest
-	'	'securelyStoredUserName = "TestWebService21195D"
-	'	'securelyStoredPassword = "BrushP@ssTest" -- DEV
-
-	'	_securelyStoredUserName = "PhotoAPIUser21195D"	' "MobileServices21195p"
-	'	_securelyStoredPassword = "P@ssword1"						'"7Fny8kbmDxr4"
-
-
-	'	'**** Providing Credentials
-	'	'System.Net.NetworkCredential implements System.NET.ICredentials
-	'	'Typically the developer does not need to provide the domain name.  This holds true for BBEC instances, as well. 
-	'	Dim NetworkCredential As New System.Net.NetworkCredential(_securelyStoredUserName, _securelyStoredPassword)
-
-	'	Return NetworkCredential
-
-	'End Function
-
-	'Private Sub LoadChildren(ByVal ConstituentID As System.Guid)
-
-	'	'Display hourglass during appfx web service calls
-	'	Cursor.Current = Cursors.WaitCursor
-	'	Cursor.Show()
-
-	'	Dim Req As New Blackbaud.AppFx.WebAPI.ServiceProxy.DataListLoadRequest
-
-	'	Dim fvSet As New Blackbaud.AppFx.XmlTypes.DataForms.DataFormFieldValueSet
-
-	'	Dim dfi As New Blackbaud.AppFx.XmlTypes.DataForms.DataFormItem
-	'	Dim Reply As New Blackbaud.AppFx.WebAPI.ServiceProxy.DataListLoadReply
-	'	Req.ClientAppInfo = _clientAppInfoHeader
-
-	'	'As an alternative to the DataListName in the request, you could also use the 		 
-	'	'DataListID/System Record ID.
-
-	'	' Initial test data list - "4a30e861-66d6-4a4d-9c93-746d36e17427" 
-	'	' Child Search data list - "97c4f605-2bbb-4624-acbd-38f67441e630"
-	'	Dim childList As ChildPhotoCollection = New ChildPhotoCollection()
-
-	'	If ConstituentID.ToString = "00000000-0000-0000-0000-000000000000" Then
-	'		Req.DataListID = _childDataListId	'  "97c4f605-2bbb-4624-acbd-38f67441e630")    ' Child Search data list
-	'		Req.ContextRecordID = "C309254"	'child Lookup Id  "00000000-0000-0000-0000-000000000000"
-
-	'		'build up the collection Children & turn into XML:
-	'		'childList.ChildPhotoList.Add(New ChildPhotoData("C309254", "HN-025", "Keilin", "Meza Ponce"))
-	'		'childList.ChildPhotoList.Add(New ChildPhotoData("C233146", "proj", "firstName", "lastName"))
-	'		'childList.ChildPhotoList.Add(New ChildPhotoData("C233100", "proj", "firstName", "lastName"))
-
-	'		Dim output As New StringBuilder()
-	'		Dim xmlWriter__1 As XmlWriter = XmlWriter.Create(output)
-	'		'Dim x As New XmlSerializer(childList.GetType)
-	'		'x.Serialize(xmlWriter__1, childList)
-
-	'		WriteCollectionXml(xmlWriter__1, "CHILDPHOTOCOLLECTION", childList, False)
-	'		xmlWriter__1.Close()
-	'		Dim xmlString As String = output.ToString()
-
-	'		'************  NOTE:  ***************
-	'		'  Need to figure out how to process the output of the datalist, to check each childdata item against the datalist values
-	'		'************************************
-
-	'		'MessageBox.Show(xmlString)
-
-	'		'this gets the list of children by XML list of lookupid values:
-	'		Dim xmlChildList As String = xmlString ' "<?xml version='1.0'?><CHILDPHOTOCOLLECTION><ITEM><CHILDLOOKUPID>C309254</CHILDLOOKUPID></ITEM><ITEM><CHILDLOOKUPID>C233146</CHILDLOOKUPID></ITEM><ITEM><CHILDLOOKUPID>C233100</CHILDLOOKUPID></ITEM></CHILDPHOTOCOLLECTION>"
-	'		Req.DataListID = _childDataListByXmlId	'  "97c4f605-2bbb-4624-acbd-38f67441e630")    ' Child Search data list
-	'		Req.ContextRecordID = xmlChildList	'child Lookup Id  "00000000-0000-0000-0000-000000000000"
-
-	'	Else
-	'		Req.DataListID = New System.Guid("48e4998f-6cb6-4d88-a9b3-a5e9128fec77")	' Sponsor's children data list 
-	'		Req.ContextRecordID = ConstituentID.ToString
-	'	End If
-
-
-	'	'fvSet.Add(New Blackbaud.AppFx.XmlTypes.DataForms.DataFormFieldValue With {.ID = "USERNAME", .Value = "JayciLane"})
-
-	'	'The DataFormItem is used to hold the set of form fields.
-	'	dfi.Values = fvSet
-
-	'	'DataFormItem is passed to the request
-	'	Req.Parameters = dfi
-
-	'	'Max rows acts as a governor to limit the amount of rows retrieved by the datalist
-	'	Req.MaxRows = 500
-	'	Req.IncludeMetaData = True
-
-	'	Try
-	'		Reply = _appFx.DataListLoad(Req)
-
-	'		CompareDataListValues(Reply, childList)
-
-	'		CompleteInteractions()
-
-	'		'DisplayDataListReplyRowsInListView(Reply, lvResults)
-
-
-	'	Catch exSoap As System.Web.Services.Protocols.SoapException
-	'		'If an error occurs we attach a SOAP fault error header.
-	'		'You can check the proxy.ResponseErrorHeaderValue to get rich
-	'		'error information including a nicer message copared to the raw exception 			message.
-	'		Dim wsMsg As String
-	'		If _appFx.ResponseErrorHeaderValue IsNot Nothing Then
-	'			wsMsg = _appFx.ResponseErrorHeaderValue.ErrorText
-	'		Else
-	'			wsMsg = exSoap.Message
-	'		End If
-	'		MsgBox(wsMsg)
-
-	'	Catch ex As Exception
-	'		MsgBox(ex.ToString)
-	'	Finally
-	'		'Hide hourglass after api call
-	'		Cursor.Current = Cursors.Default
-	'		Cursor.Show()
-	'	End Try
-	'End Sub
-
 	Private Sub GetConstituentID(ByVal BBISUserName As String)
 
 		'Display hourglass during appfx web service calls
@@ -308,7 +203,6 @@ Public Class Form1
 		End Try
 	End Sub
 
-
 	Private Sub DisplayDataListReplyRowsInListView(ByVal Reply As Blackbaud.AppFx.WebAPI.ServiceProxy.DataListLoadReply, ByVal ListView As System.Windows.Forms.ListView)
 		Try
 			'Display hourglass during appfx web service calls
@@ -351,7 +245,6 @@ Public Class Form1
 			Cursor.Show()
 		End Try
 	End Sub
-
 
 	Private Sub DisplayComparisonResultsInListView(ByVal ExceptionList As ChildPhotoCollection, ByRef ListView As System.Windows.Forms.ListView)
 		Try
@@ -459,12 +352,29 @@ Public Class Form1
 		Dim crmLastName As String = String.Empty
 
 		'these are used for soundex-type Name comparisons
-		Dim crmMphone As New DoubleMetaphone()
-		Dim fileMphone As New DoubleMetaphone()
-		Dim crmSoundex As New Soundex.Soundex()
-		Dim fileSoundex As New Soundex.Soundex()
+		'Dim crmMphone As New DoubleMetaphone()
+		'Dim fileMphone As New DoubleMetaphone()
+		'Dim crmSoundex As New Soundex.Soundex()
+		'Dim fileSoundex As New Soundex.Soundex()
 		'Dim crmNameSoundex As String
 		'Dim fileNameSoundex As String
+
+		'5/30/14 new for the 2 name check algorithms:
+		Dim isJWFirstNameValid As Boolean = True
+		Dim isJWLastNameValid As Boolean = True
+		Dim isDLFirstNameValid As Boolean = True
+		Dim isDLLastNameValid As Boolean = True
+		Dim isJWChildNameValid As Boolean = True
+		Dim isJWPhotoNameValid As Boolean = True
+		Dim isDLChildNameValid As Boolean = True
+		Dim isDLPhotoNameValid As Boolean = True
+
+		Dim isValid As Boolean = False
+		Dim canCompareFirstLastName As Boolean = False
+		Dim mustCheckChildName As Boolean = False
+
+		Dim jwProximityValue As Double
+		Dim dlDistanceValue As Integer
 
 		_nameNotMatchList = New ChildPhotoCollection()
 		_notInCrmList = New ChildPhotoCollection()
@@ -490,93 +400,221 @@ Public Class Form1
 			For index = 0 To photoFolderChildrenList.ChildPhotoList.Count - 1
 				'child is valid until proven otherwise
 				isChildValid = True
+				isValid = False
+				isJWChildNameValid = False
+				isDLChildNameValid = True
+				canCompareFirstLastName = False
+				mustCheckChildName = True
 				photoChild = photoFolderChildrenList.ChildPhotoList(index)
 				crmChild = crmChildList.ChildPhotoList.Where(Function(x) x.ChildLookupId.ToLower().Equals(photoChild.ChildLookupId.ToLower())).FirstOrDefault()
-				crmFirstName = String.Empty
-				crmLastName = String.Empty
+				'5/30/14 Memphis: we are now populating the first and last name from the CRM data list call:
+				'crmFirstName = String.Empty
+				'crmLastName = String.Empty
 
 				If Not crmChild Is Nothing Then
 					'if user checked the override box, then skip the Name check
 					If nameValidationOverrideCheckBox.Checked = False Then
-						'populate the crmFirstName and crmLastName values
-						If (Not crmChild.ChildName Is Nothing) AndAlso crmChild.ChildName.Contains(".") Then
-							crmFirstName = crmChild.ChildName.ToString().Substring(0, crmChild.ChildName.IndexOf(".") - 1)
-							crmLastName = crmChild.ChildName.ToString().Substring(crmChild.ChildName.IndexOf(".") - 1)
-						Else
-							'separate the names without the period after middle name using RegEx
-							'Dim s As String = RegularExpressions.Regex.Replace("ThisIsMyCapsDelimitedString", "([A-Z])", " $1")
-							Dim crmChildNameRegEx As String = RegularExpressions.Regex.Replace(crmChild.ChildName, "([A-Z])", " $1").Trim()
-							Dim childNameItems As String() = crmChildNameRegEx.Split(" ")
-							If childNameItems.Count > 0 Then
-								crmFirstName = childNameItems(0) 'firstName
-								crmLastName = childNameItems(1)	 'lastname
-							End If
-						End If
+						'5/30/14 Memphis: clean out the extra characters so they don't throw off the comparisons:
+						CleanoutExtraChars(photoChild.ChildName)
+						CleanoutExtraChars(crmChild.ChildName)
+						Dim dlDistance As DLDistance = New DLDistance()
+
+						'Memphis 7/7: set the flags for first/lastname checking
+						canCompareFirstLastName = ((photoChild.HasMiddleInitial = True) OrElse (String.IsNullOrEmpty(photoChild.FileFirstName) = False) OrElse (String.IsNullOrEmpty(photoChild.FileLastName)))
 
 						'first check if the names match at all at a string level:
 						If Not photoChild.ChildName.ToLower().Equals(crmChild.ChildName.ToLower()) Then
-							'names string values don't match, so do the metaphone check in case they're very close
-							'use the DoubleMetaphone class to generate the keys & then compare the first and last names respectively
-							'check the 1st names first:
-							crmMphone.computeKeys(crmFirstName.ToLower())
-							fileMphone.computeKeys(photoChild.FileFirstName.ToLower())
-							If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
-								'don't match at all:
-								photoChild.CRMChildName = crmChild.CRMChildName
-								_nameNotMatchList.ChildPhotoList.Add(photoChild)
-								isChildValid = False
+							'Memphis 7/8: it seems that the JWProximity may show a match when it doesn't match, so 
+							'first check the individual names, if possible:
+							'check the first and last names if the whole name didn't match:
+							'Memphis 7/7: if we have a middle initial in the filename, or we have a first and last name,
+							' then we can compare first and last names:
+							If canCompareFirstLastName = True Then
+								'If isJWChildNameValid = False AndAlso isDLChildNameValid = False Then
+								'compare first name with JWProximity:
+								CleanoutExtraChars(crmChild.CRMFirstName)
+								CleanoutExtraChars(photoChild.FileFirstName)
+								jwProximityValue = JaroWinklerDistance.proximity(crmChild.CRMFirstName, photoChild.FileFirstName)
+								If jwProximityValue >= _jwProximityThreshold Then
+									isJWFirstNameValid = True
+								Else
+									isJWFirstNameValid = False
+								End If								
+
+								'compare last name with JWProximity:
+								CleanoutExtraChars(crmChild.CRMLastName)
+								CleanoutExtraChars(photoChild.FileLastName)
+								jwProximityValue = JaroWinklerDistance.proximity(crmChild.CRMLastName, photoChild.FileLastName)
+								If jwProximityValue >= _jwProximityThreshold Then
+									isJWLastNameValid = True
+								Else
+									isJWLastNameValid = False
+								End If
+
+								'Me.txtDLDistance.Text = dlDistance.DamerauLevenshteinDistance(source, target)
+								'firstname check with DLDistance:
+								dlDistanceValue = dlDistance.DamerauLevenshteinDistance(crmChild.CRMFirstName, photoChild.FileFirstName)
+								If dlDistanceValue <= _dlDistanceThreshold Then
+									isDLFirstNameValid = True
+								Else
+									isDLFirstNameValid = False
+								End If
+
+								'lastname compare with DLDistance:
+								dlDistanceValue = dlDistance.DamerauLevenshteinDistance(crmChild.CRMLastName, photoChild.FileLastName)
+								If dlDistanceValue <= _dlDistanceThreshold Then
+									isDLLastNameValid = True
+								Else
+									isDLLastNameValid = False
+								End If
+
+								'Memphis 7/8: set the flag based on results of above
+								If isJWFirstNameValid = True AndAlso isJWLastNameValid = True Then
+									'do not need to check the child name if these two passed:
+									mustCheckChildName = False
+									isChildValid = True
+									isValid = True
+								Else
+									'if not valid yet, check the DL Distance and consider those values:
+									If isDLFirstNameValid = True AndAlso isDLLastNameValid = True Then
+										'good enough, call it a match:
+										mustCheckChildName = False
+										isChildValid = True
+										isValid = True
+									Else
+										mustCheckChildName = False
+										isChildValid = False
+										isValid = False
+									End If
+								End If
+
+								'the following was copied to further down in the code:
+								''calculate the final decision:
+								'If isJWFirstNameValid AndAlso isJWLastNameValid Then
+								'	'do not need to consider the DL Distance if these are valid:
+								'	isValid = True
+								'End If
+
+								''if not valid yet, check the DL Distance and consider those values:
+								'If isValid = False Then
+								'	If isDLFirstNameValid AndAlso isDLLastNameValid Then
+								'		'good enough, call it a match:
+								'		isChildValid = True
+								'	End If
+								'End If
+								'Else
+								'	'calculate the validity of the child:
+								'	isValid = ((isDLChildNameValid = True) AndAlso (isJWChildNameValid = True))
+								'End If
+								'Else
+								'	'calculate the validity of the child, since we can't compare using first/last names:
+								'	isValid = ((isDLChildNameValid = True) AndAlso (isJWChildNameValid = True))
 							End If
 
-							If isChildValid = True Then
-								'check the 2nd names next:
-								crmMphone.computeKeys(crmLastName.ToLower())
-								fileMphone.computeKeys(photoChild.FileLastName.ToLower())
-								If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
-									'don't match at all:
-									photoChild.CRMChildName = crmChild.CRMChildName
-									_nameNotMatchList.ChildPhotoList.Add(photoChild)
+
+							' CHECK CHILD NAME IF ABOVE WASN'T PERFORMED!
+							'Memphis 7/8: refactored this and the above, so now check the whole child name
+							'if we couldn't check the first/last names:
+							If ((canCompareFirstLastName = False OrElse mustCheckChildName = True) AndAlso (isChildValid = False)) Then
+								' 5/30/14 Memphis:  now using the Jaro Winkler Proximity and the DL Distance algorithms
+								'   to check names for similarity:
+								'5/30/14 Memphis: now using the new JWDistance and DLDistance classes for name comparisons:
+								'compare childname value using JWDistance:
+								jwProximityValue = JaroWinklerDistance.proximity(crmChild.ChildName, photoChild.ChildName)
+								If jwProximityValue >= _jwProximityThreshold Then
+									isJWChildNameValid = True
+								Else
+									isJWChildNameValid = False
+								End If
+
+								'if JW didn't validate, try the DLDistance:
+								If isJWChildNameValid = False Then
+									dlDistanceValue = dlDistance.DamerauLevenshteinDistance(crmChild.ChildName, photoChild.ChildName)
+									If dlDistanceValue <= _dlDistanceThreshold Then
+										isDLChildNameValid = True
+									Else
+										isDLChildNameValid = False
+									End If
+								End If
+
+								If isJWChildNameValid = True AndAlso isDLChildNameValid = True Then
+									isValid = True
+									isChildValid = True
+								Else
+									isValid = False
 									isChildValid = False
-
-									'last resort, check the compare:
-									'If Not String.Compare(crmChild.ChildName.ToLower(), photoChild.ChildName.ToLower()) = 0 Then
-									'	photoChild.CRMChildName = crmChild.CRMChildName
-									'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
-									'	isChildValid = False
-									'End If
-
-									'If (Not String.IsNullOrEmpty(crmMphone.AlternateKey) AndAlso Not String.IsNullOrEmpty(fileMphone.AlternateKey)) Then
-									'	If Not crmMphone.AlternateKey.Equals(fileMphone.AlternateKey) Then
-									'		'just doesn't match!
-									'		'set the crm childname so it will be output
-									'		photoChild.CRMChildName = crmChild.CRMChildName
-									'		_nameNotMatchList.ChildPhotoList.Add(photoChild)
-									'		isChildValid = False
-									'	End If
-									'Else
-									'	'just doesn't match!
-									'	'set the crm childname so it will be output
-									'	photoChild.CRMChildName = crmChild.CRMChildName
-									'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
-									'	isChildValid = False
-									'End If
 								End If
 							End If
 
-							' Memphis 5/6/14: skipping the soundex as it doesn't seem to work
-							'try a soundex to see if the names are really the same
-							'crmNameSoundex = crmSoundex.GetSoundex(crmChild.ChildName.ToLower())
-							'fileNameSoundex = fileSoundex.GetSoundex(photoChild.ChildName.ToLower())
-							'' consider using the Compare, because the soundex values may equal:
-							''Dim compareVal As Integer = crmNameSoundex.Compare(crmChild.ChildName.ToLower(), photoChild.ChildName.ToLower())
-							'If Not String.Compare(crmChild.ChildName.ToLower(), photoChild.ChildName.ToLower()) = 0 Then
+							''calculate the final decision:
+							'If isJWFirstNameValid AndAlso isJWLastNameValid Then
+							'	'do not need to consider the DL Distance if these are valid:
+							'	isValid = True
+							'End If
+
+							''if not valid yet, check the DL Distance and consider those values:
+							'If isValid = False Then
+							'	If isDLFirstNameValid AndAlso isDLLastNameValid Then
+							'		'good enough, call it a match:
+							'		isChildValid = True
+							'	End If
+							'End If
+
+							'at this point, if not valid, probably never going to be valid:
+							If isValid = False Then
+								isChildValid = False
+							End If
+							' end of new 5/30/14
+
+
+							'6/3/14: Memphis  no longer using these algorithms:
+							''names string values don't match, so do the metaphone check in case they're very close
+							''use the DoubleMetaphone class to generate the keys & then compare the first and last names respectively
+							''check the 1st names first:
+							'crmMphone.computeKeys(crmFirstName.ToLower())
+							'fileMphone.computeKeys(photoChild.FileFirstName.ToLower())
+							'If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
+							'	'don't match at all:
 							'	photoChild.CRMChildName = crmChild.CRMChildName
 							'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
 							'	isChildValid = False
 							'End If
+
 							'If isChildValid = True Then
-							'	If Not crmNameSoundex.Equals(fileNameSoundex) Then
+							'	'check the 2nd names next:
+							'	crmMphone.computeKeys(crmLastName.ToLower())
+							'	fileMphone.computeKeys(photoChild.FileLastName.ToLower())
+							'	If (Not String.IsNullOrEmpty(crmMphone.PrimaryKey) AndAlso Not String.IsNullOrEmpty(fileMphone.PrimaryKey)) AndAlso Not crmMphone.PrimaryKey.Equals(fileMphone.PrimaryKey) Then
+							'		'don't match at all:
+							'		photoChild.CRMChildName = crmChild.CRMChildName
+							'		_nameNotMatchList.ChildPhotoList.Add(photoChild)
+							'		isChildValid = False
+
+							'		'last resort, check the compare:
+							'		'If Not String.Compare(crmChild.ChildName.ToLower(), photoChild.ChildName.ToLower()) = 0 Then
+							'		'	photoChild.CRMChildName = crmChild.CRMChildName
+							'		'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
+							'		'	isChildValid = False
+							'		'End If
+
+							'		'If (Not String.IsNullOrEmpty(crmMphone.AlternateKey) AndAlso Not String.IsNullOrEmpty(fileMphone.AlternateKey)) Then
+							'		'	If Not crmMphone.AlternateKey.Equals(fileMphone.AlternateKey) Then
+							'		'		'just doesn't match!
+							'		'		'set the crm childname so it will be output
+							'		'		photoChild.CRMChildName = crmChild.CRMChildName
+							'		'		_nameNotMatchList.ChildPhotoList.Add(photoChild)
+							'		'		isChildValid = False
+							'		'	End If
+							'		'Else
+							'		'	'just doesn't match!
+							'		'	'set the crm childname so it will be output
+							'		'	photoChild.CRMChildName = crmChild.CRMChildName
+							'		'	_nameNotMatchList.ChildPhotoList.Add(photoChild)
+							'		'	isChildValid = False
+							'		'End If
 							'	End If
 							'End If
+
 						End If
 					End If
 
@@ -591,6 +629,9 @@ Public Class Form1
 							_projectIdNotMatchList.ChildPhotoList.Add(photoChild)
 							isChildValid = False
 						End If
+					Else
+						photoChild.CRMChildName = crmChild.CRMChildName
+						_nameNotMatchList.ChildPhotoList.Add(photoChild)
 					End If
 
 				Else
@@ -764,18 +805,25 @@ Public Class Form1
 
 	Private Function CreatePhotoCollectionFromReply(ByVal Reply As ServiceProxy.DataListLoadReply) As List(Of ChildPhotoData)
 		Dim returnList As New List(Of ChildPhotoData)
+		' 5/30/14 Memphis: updated the DataList Spec to return first & last names:
 		'rtrim(replace(sc.[NAME], ' ','')) as CHILDNAME,
 		'so.LOOKUPID as CHILDID, 
 		'sl.LOOKUPID as LOCATIONID,
-		'sc.[NAME] as CRMNAME
+		'sc.[NAME] as CRMNAME,
+		'sc.[FIRSTNAME] as FIRSTNAME,
+		'sc.[LASTNAME] as LASTNAME
 
 		Dim childNameColumn As Integer = 0
 		Dim lookupIdColumn As Integer = 1
 		Dim projectIdColumn As Integer = 2
 		Dim crmNameColumn As Integer = 3
+		Dim firstNameColumn As Integer = 4
+		Dim lastNameColumn As Integer = 5
 
 		For Each row As Blackbaud.AppFx.WebAPI.ServiceProxy.DataListResultRow In Reply.Rows
-			returnList.Add(New ChildPhotoData(row.Values(lookupIdColumn).ToString(), row.Values(projectIdColumn).ToString(), row.Values(childNameColumn).ToString().Replace(" ", ""), "", row.Values(crmNameColumn).ToString()))
+			returnList.Add(New ChildPhotoData(row.Values(lookupIdColumn).ToString(), row.Values(projectIdColumn).ToString(), _
+					  row.Values(childNameColumn).ToString().Replace(" ", ""), "", row.Values(crmNameColumn).ToString(), _
+					  row.Values(firstNameColumn).ToString(), row.Values(lastNameColumn).ToString()))
 		Next
 
 		Return returnList
@@ -1171,8 +1219,23 @@ Public Class Form1
 		Dim dataCounter As Integer = 0
 		Dim fileNameTemp As String = String.Empty
 		Dim isValidToParse As Boolean = True
+		Dim hasMiddleInitial As Boolean = False
+
+		Dim periodPosition As Integer
+		Dim firstNameString As String
+		Dim firstNameItems As String()
+		Dim firstNameCounter As Integer
+		Dim firstNameBuilder As StringBuilder = New StringBuilder()
+		Dim lastNameString As String
+		Dim lastNameItems As String()
+		Dim lastNameCounter As Integer
+		Dim lastNameBuilder As StringBuilder = New StringBuilder()
+		Dim nameBuilder As StringBuilder = New StringBuilder()
 
 		For Each fl As FileInfo In allFiles
+			'Memphis 6/30/14 added:
+			hasMiddleInitial = False	'default to False, force to true if we know there is one
+
 			'Memphis 5/13/14: ensure that the filename doesn't have multiple dashes in it
 			'                 should only be 1 in the project ID, here's a bad example: 
 			'                 DO-105-C228353-Vanessa Martinez.JPG
@@ -1220,25 +1283,171 @@ Public Class Form1
 					fileNameTemp = fileNameTemp.Replace(".JPG", "").Trim()
 				End If
 
-				fileNameItems = fileNameTemp.Split(" ")
-				dataCounter = fileNameItems.Count - 1
-				childData = New ChildPhotoData()  'lookupid, projectid, name
-				childData.ChildProject = fileNameItems(0)
-				childData.ChildLookupId = fileNameItems(1)
-				childData.PhotoFile = fl.Name
-				childData.FileFirstName = fileNameItems(2)
+				'6/5/14: Memphis make sure there's a space after middle initial and last name, before splitting:
+				'If fileNameTemp.Contains(".") Then
+				'	fileNameTemp = AddSpacesToSentence(fileNameTemp, True)
+				'End If
 
+				'6/30/14:  Memphis
+
+				'If the filename has a period in it, assume that's the middle initial
+				If fileNameTemp.Contains(".") Then
+					'If there are more than one period characters in the filename, we don't know which is the middle initial,
+					'  so we have to check the count, if greater than 1 we assume we can't get the middle initial:
+					If CountCharacter(fileNameTemp, ".") = 1 Then
+						'  If the filename has a period in it, assume that's the middle initial
+						'    -Any words with spaces before the middle initial are the 1st name
+						'      - Split the substring from starting to IndexOf the period "."
+						'set the Property to indicate this photofile has a middle initial.
+						hasMiddleInitial = True
+					Else
+						'is there a way to strip out the extra period character?
+						'	'probably a trailing period, so remove that one if it is:
+						'Check if this is a trailing period:
+						Dim lastPeriodIndex As Integer = fileNameTemp.LastIndexOf(".")
+						'compare length of string to the position of the last period, if close, 
+						'then call it a trailing period in the filename:
+						If fileNameTemp.Length - lastPeriodIndex <= 2 Then
+							'this is probably a trailing period, so get rid of it:
+							fileNameTemp = fileNameTemp.Substring(0, lastPeriodIndex)
+							hasMiddleInitial = True
+						Else
+							'	Dim tempString = fileNameTemp.Substring(0, fileNameTemp.LastIndexOf("."))
+							'	fileNameItems = AddSpacesToSentence(tempString.Substring(14).Trim(), True).Split(" ")
+							'	dataCounter = fileNameItems.Count - 1
+							hasMiddleInitial = False
+						End If
+					End If
+				Else
+					' If the filename does NOT have a period in it (middle name), then all we can do is:
+					'   strip and compress the string and compare it to the stripped and compressed CRM:
+					'   - compare against the entire CRM name
+					'   - if not match, compare against the CRM FirstName and LastName
+					'set the Property to indicate this photofile does NOT have a middle initial.
+					'MsgBox("There is no middle name, so unable to parse into names, can only compress and strip and compare...")
+					hasMiddleInitial = False
+				End If
+				' END OF 6/30/14 add
+
+				If hasMiddleInitial = True Then
+					periodPosition = fileNameTemp.IndexOf(".")
+					firstNameString = fileNameTemp.Substring(0, periodPosition)
+					firstNameItems = firstNameString.Split(" ")
+					firstNameCounter = firstNameItems.Count - 1
+					firstNameBuilder = New StringBuilder()
+					'child project is first
+					'MsgBox(String.Format("Project: {0}", firstNameItems(0)))
+					'child id is 2nd
+					'MsgBox(String.Format("ChildId: {0}", firstNameItems(1)))
+
+					'Memphis: 7/7/14: we do NOT want to include the middle name/initial in the firstname
+					' so don't append the last item in the split array:
+					For counter = 2 To firstNameCounter - 1
+						'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), firstNameItems(counter)))
+						firstNameBuilder.Append(firstNameItems(counter))
+					Next
+					'MsgBox(String.Format("firstNameBuilder: {0}", firstNameBuilder.ToString()))
+
+					'Parse last names:
+					'    -Any words after the middle initial are the last name
+					'      - Split the substring from the IndexOf the period "." to the end of the string
+					lastNameString = fileNameTemp.Substring(periodPosition + 1).Trim()
+					lastNameItems = lastNameString.Split(" ")
+					lastNameCounter = lastNameItems.Count - 1
+					lastNameBuilder = New StringBuilder()
+					For counter = 0 To lastNameCounter
+						'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), lastNameItems(counter)))
+						lastNameBuilder.Append(lastNameItems(counter))
+					Next
+					'MsgBox(String.Format("lastNameBuilder: {0}", lastNameBuilder.ToString()))
+
+					'populate the childData object:
+					childData = New ChildPhotoData()  'lookupid, projectid, name
+					childData.ChildProject = firstNameItems(0)
+					childData.ChildLookupId = firstNameItems(1)
+					childData.PhotoFile = fl.Name
+					childData.FileFirstName = firstNameBuilder.ToString()
+					childData.FileLastName = lastNameBuilder.ToString()
+					childData.HasMiddleInitial = hasMiddleInitial
+					childData.ChildName = childData.FileFirstName.Replace(" ", "").Trim() + childData.FileLastName.Replace(" ", "").Trim()
+				Else
+					'populate the childData object:
+					fileNameItems = fileNameTemp.Split(" ")
+					dataCounter = fileNameItems.Count - 1
+					childData = New ChildPhotoData()  'lookupid, projectid, name
+					childData.ChildProject = fileNameItems(0)
+					childData.ChildLookupId = fileNameItems(1)
+					childData.PhotoFile = fl.Name
+					childData.HasMiddleInitial = hasMiddleInitial
+					'concatenate the names values
+					nameBuilder.Clear()
+					For fileCounter = 2 To dataCounter
+						If Not fileNameItems(fileCounter).ToLower().Contains("copy") Then
+							nameBuilder.Append(fileNameItems(fileCounter))
+						End If
+						'Test the string to see if there are only two values in it, if so, assume 1st is FirstName, 2nd is LastName
+						' if there are, then dataCounter will be 3, and items 2 and 3 will be 1st & last name respectively:
+						If dataCounter = 3 Then
+							If fileCounter = 2 Then
+								'populate firstname:
+								childData.FileFirstName = fileNameItems(fileCounter)
+							End If
+							If fileCounter = 3 Then
+								'populate lastname:
+								childData.FileLastName = fileNameItems(fileCounter)
+							End If
+						End If
+					Next
+					childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
+				End If
+
+				'MsgBox(String.Format("Project: {0}", childData.ChildProject))
+				'MsgBox(String.Format("ChildId: {0}", childData.ChildLookupId))
+				'MsgBox(String.Format("PhotoFile: {0}", childData.PhotoFile))
+				'MsgBox(String.Format("FileFirstName: {0}", childData.FileFirstName))
+				'MsgBox(String.Format("FileLastName: {0}", childData.FileLastName))
+				'MsgBox(String.Format("ChildName: {0}", childData.ChildName))
+
+				'Memphis 7/7 commented out, replaced with code above:
+				'fileNameItems = fileNameTemp.Split(" ")
+				'dataCounter = fileNameItems.Count - 1
+				'childData = New ChildPhotoData()  'lookupid, projectid, name
+				'childData.ChildProject = fileNameItems(0)
+				'childData.ChildLookupId = fileNameItems(1)
+				'childData.PhotoFile = fl.Name
+				'childData.FileFirstName = fileNameItems(2)
+				'childData.HasMiddleInitial = hasMiddleInitial
+				'Memphis 7/7 end of comment out:
+
+				'AddSpacesToSentence(fileNameTemp.Substring(14).Trim(), True)
+				'text.Split(".").Length -1
+				'Memphis 7/7: took this out, no longer necessary:
+				'Dim periodCount As Integer = fileNameTemp.Split(".").Length - 1
+				'If periodCount = 1 Then
+				'	fileNameItems = AddSpacesToSentence(fileNameTemp.Substring(14).Trim(), True).Split(" ")
+				'	dataCounter = fileNameItems.Count - 1
+				'ElseIf periodCount > 1 Then
+				'	'probably a trailing period, so remove that one:
+				'	Dim tempString = fileNameTemp.Substring(0, fileNameTemp.LastIndexOf("."))
+				'	fileNameItems = AddSpacesToSentence(tempString.Substring(14).Trim(), True).Split(" ")
+				'	dataCounter = fileNameItems.Count - 1
+				'End If
+				'end 7/7
+
+
+				'Memphis 7/7 moved up above:
 				'concatenate the names values
-				Dim nameBuilder As StringBuilder = New StringBuilder()
-				For fileCounter = 2 To dataCounter
-					If Not fileNameItems(fileCounter).ToLower().Contains("copy") Then
-						nameBuilder.Append(fileNameItems(fileCounter))
-					End If
-					If fileCounter = 3 Then
-						childData.FileLastName = fileNameItems(fileCounter)
-					End If
-				Next
-				childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
+				'Dim nameBuilder As StringBuilder = New StringBuilder()
+				'For fileCounter = 2 To dataCounter
+				'	If Not fileNameItems(fileCounter).ToLower().Contains("copy") Then
+				'		nameBuilder.Append(fileNameItems(fileCounter))
+				'	End If
+				'	If fileCounter = 3 Then
+				'		childData.FileLastName = fileNameItems(fileCounter)
+				'	End If
+				'Next
+				'childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
+				'end of move
 
 				'if there is not a C in the childlookupid then we can't use this one:
 				If childData.ChildLookupId.ToLower().StartsWith("c") Then
@@ -1325,10 +1534,20 @@ Public Class Form1
 				nameValidationOverrideCheckBox.Checked = False
 			End If
 		End If
+		Me.TrackBar1.Enabled = Not nameValidationOverrideCheckBox.Checked
 	End Sub
 
 	Private Sub InitializeEverything()
 		GetSetConfigSettingsValues()
+
+		'5/30/14
+		' set to medium strict (middle)
+		Me.TrackBar1.Value = 1
+
+		'probably make these config values??:
+		'by default, when loading or reset, set to medium strictness:
+		_jwProximityThreshold = _jwProximityMedium
+		_dlDistanceThreshold = _dlDistanceMedium
 
 		'this resets/restarts stuff, called by Form Load and by Reset button
 		InitializeAppFxWebService()
@@ -1414,4 +1633,54 @@ Public Class Form1
 		otherLabel.Visible = otherRadioButton.Checked
 		otherSourceText.Visible = otherRadioButton.Checked
 	End Sub
+
+
+	Private Sub CleanoutExtraChars(ByRef stringValue As String)
+		If stringValue.Contains(".") Then
+			stringValue = stringValue.Replace(".", "")
+		End If
+		If stringValue.Contains("-") Then
+			stringValue = stringValue.Replace("-", "")
+		End If
+		If stringValue.Contains("_") Then
+			stringValue = stringValue.Replace("_", "")
+		End If
+
+	End Sub
+
+	Private Sub TrackBar1_Scroll(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles TrackBar1.Scroll
+		'user can select between 0-2: 0 is least strict, 2 is most stric
+		If Me.TrackBar1.Value = 0 Then
+			_jwProximityThreshold = _jwProximityLow
+			_dlDistanceThreshold = _dlDistanceLow
+		End If
+
+		If Me.TrackBar1.Value = 1 Then
+			_jwProximityThreshold = _jwProximityMedium
+			_dlDistanceThreshold = _dlDistanceMedium
+		End If
+
+		If Me.TrackBar1.Value > 1 Then
+			_jwProximityThreshold = _jwProximityHigh
+			_dlDistanceThreshold = _dlDistanceHigh
+		End If
+	End Sub
+
+	Private Function AddSpacesToSentence(ByVal text As String, ByVal preserveAcronyms As Boolean) As String
+		If String.IsNullOrWhiteSpace(text) Then
+			Return String.Empty
+		End If
+		Dim newText As New StringBuilder(text.Length * 2)
+		newText.Append(text(0))
+		For i As Integer = 1 To text.Length - 1
+			If Char.IsUpper(text(i)) Then
+				If (text(i - 1) <> " "c AndAlso Not Char.IsUpper(text(i - 1))) OrElse (preserveAcronyms AndAlso Char.IsUpper(text(i - 1)) AndAlso i < text.Length - 1 AndAlso Not Char.IsUpper(text(i + 1))) Then
+					newText.Append(" "c)
+				End If
+			End If
+			newText.Append(text(i))
+		Next
+		Return newText.ToString()
+	End Function
+
 End Class

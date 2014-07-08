@@ -56,11 +56,8 @@
     <Reference Include="Blackbaud.AppFx.XmlTypes, Version=2.93.2034.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\References\Third Party\Blackbaud.AppFx.XmlTypes.dll</HintPath>
     </Reference>
-    <Reference Include="Metaphone.NET">
-      <HintPath>.\Metaphone.NET.dll</HintPath>
-    </Reference>
-    <Reference Include="Soundex">
-      <HintPath>.\Soundex.dll</HintPath>
+    <Reference Include="NameComparisonUtility">
+      <HintPath>..\..\..\References\MoM\NameComparisonUtility.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
