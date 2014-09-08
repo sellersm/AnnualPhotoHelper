@@ -5,7 +5,7 @@ Imports System.Xml
 Imports System.Xml.Serialization
 Imports System.Text.RegularExpressions
 Imports System.IO
-Imports nullpointer.Metaphone
+'Imports nullpointer.Metaphone
 Imports NameComparisonUtility
 
 Public Class Form1
