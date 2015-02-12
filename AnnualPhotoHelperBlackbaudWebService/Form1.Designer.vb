@@ -268,6 +268,7 @@ Partial Class Form1
 		Me.TrackBar1.Name = "TrackBar1"
 		Me.TrackBar1.Size = New System.Drawing.Size(104, 45)
 		Me.TrackBar1.TabIndex = 24
+		Me.TrackBar1.Value = 2
 		'
 		'Label3
 		'

@@ -43,9 +43,9 @@ Public Class Form1
 	Private _fileNameParseErrorList As New ChildPhotoCollection
 
 	'these threshold values for the strictness slider values used for comparing against the JW Proximity and DL Distance:
-	Dim _jwProximityLow As Double = 0.7D
-	Dim _jwProximityMedium As Double = 0.8D
-	Dim _jwProximityHigh As Double = 0.875D
+	Dim _jwProximityLow As Double = 0.75D  ' 0.7D
+	Dim _jwProximityMedium As Double = 0.85D ' 0.8D
+	Dim _jwProximityHigh As Double = 0.9D ' 0.875D
 
 	Dim _dlDistanceLow As Integer = 4
 	Dim _dlDistanceMedium As Integer = 3
@@ -1542,7 +1542,8 @@ Public Class Form1
 
 		'5/30/14
 		' set to medium strict (middle)
-		Me.TrackBar1.Value = 1
+		'2/12/15 per Laura, set to most strict (high)
+		Me.TrackBar1.Value = 2
 
 		'probably make these config values??:
 		'by default, when loading or reset, set to medium strictness:
