@@ -43,9 +43,10 @@ Public Class Form1
 	Private _fileNameParseErrorList As New ChildPhotoCollection
 
 	'these threshold values for the strictness slider values used for comparing against the JW Proximity and DL Distance:
-	Dim _jwProximityLow As Double = 0.75D  ' 0.7D
-	Dim _jwProximityMedium As Double = 0.85D ' 0.8D
-	Dim _jwProximityHigh As Double = 0.9D ' 0.875D
+	'2/12/15: these values come from Laura:
+	Dim _jwProximityLow As Double = 0.8D  ' 0.7D
+	Dim _jwProximityMedium As Double = 0.875D ' 0.8D
+	Dim _jwProximityHigh As Double = 0.95D ' 0.875D
 
 	Dim _dlDistanceLow As Integer = 4
 	Dim _dlDistanceMedium As Integer = 3
