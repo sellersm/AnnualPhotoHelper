@@ -435,7 +435,7 @@ Public Class Form1
 								'compare first name with JWProximity:
 								CleanoutExtraChars(crmChild.CRMFirstName)
 								CleanoutExtraChars(photoChild.FileFirstName)
-								jwProximityValue = JaroWinklerDistance.proximity(crmChild.CRMFirstName, photoChild.FileFirstName)
+								jwProximityValue = JaroWinklerDistance.proximity(crmChild.CRMFirstName.ToLower(), photoChild.FileFirstName.ToLower())
 								If jwProximityValue >= _jwProximityThreshold Then
 									isJWFirstNameValid = True
 								Else
@@ -445,7 +445,7 @@ Public Class Form1
 								'compare last name with JWProximity:
 								CleanoutExtraChars(crmChild.CRMLastName)
 								CleanoutExtraChars(photoChild.FileLastName)
-								jwProximityValue = JaroWinklerDistance.proximity(crmChild.CRMLastName, photoChild.FileLastName)
+								jwProximityValue = JaroWinklerDistance.proximity(crmChild.CRMLastName.ToLower(), photoChild.FileLastName.ToLower())
 								If jwProximityValue >= _jwProximityThreshold Then
 									isJWLastNameValid = True
 								Else
@@ -454,7 +454,7 @@ Public Class Form1
 
 								'Me.txtDLDistance.Text = dlDistance.DamerauLevenshteinDistance(source, target)
 								'firstname check with DLDistance:
-								dlDistanceValue = dlDistance.DamerauLevenshteinDistance(crmChild.CRMFirstName, photoChild.FileFirstName)
+								dlDistanceValue = dlDistance.DamerauLevenshteinDistance(crmChild.CRMFirstName.ToLower(), photoChild.FileFirstName.ToLower())
 								If dlDistanceValue <= _dlDistanceThreshold Then
 									isDLFirstNameValid = True
 								Else
@@ -462,7 +462,7 @@ Public Class Form1
 								End If
 
 								'lastname compare with DLDistance:
-								dlDistanceValue = dlDistance.DamerauLevenshteinDistance(crmChild.CRMLastName, photoChild.FileLastName)
+								dlDistanceValue = dlDistance.DamerauLevenshteinDistance(crmChild.CRMLastName.ToLower(), photoChild.FileLastName.ToLower())
 								If dlDistanceValue <= _dlDistanceThreshold Then
 									isDLLastNameValid = True
 								Else
@@ -489,27 +489,6 @@ Public Class Form1
 									End If
 								End If
 
-								'the following was copied to further down in the code:
-								''calculate the final decision:
-								'If isJWFirstNameValid AndAlso isJWLastNameValid Then
-								'	'do not need to consider the DL Distance if these are valid:
-								'	isValid = True
-								'End If
-
-								''if not valid yet, check the DL Distance and consider those values:
-								'If isValid = False Then
-								'	If isDLFirstNameValid AndAlso isDLLastNameValid Then
-								'		'good enough, call it a match:
-								'		isChildValid = True
-								'	End If
-								'End If
-								'Else
-								'	'calculate the validity of the child:
-								'	isValid = ((isDLChildNameValid = True) AndAlso (isJWChildNameValid = True))
-								'End If
-								'Else
-								'	'calculate the validity of the child, since we can't compare using first/last names:
-								'	isValid = ((isDLChildNameValid = True) AndAlso (isJWChildNameValid = True))
 							End If
 
 
@@ -1233,9 +1212,14 @@ Public Class Form1
 		Dim lastNameBuilder As StringBuilder = New StringBuilder()
 		Dim nameBuilder As StringBuilder = New StringBuilder()
 
+		Dim childAlreadyPopulated As Boolean = False
+		Dim middleInitial As String = String.Empty
+
+
 		For Each fl As FileInfo In allFiles
 			'Memphis 6/30/14 added:
-			hasMiddleInitial = False	'default to False, force to true if we know there is one
+			hasMiddleInitial = False		'default to False, force to true if we know there is one
+			childAlreadyPopulated = False	'default to False, force to true if we populate child data
 
 			'Memphis 5/13/14: ensure that the filename doesn't have multiple dashes in it
 			'                 should only be 1 in the project ID, here's a bad example: 
@@ -1275,14 +1259,15 @@ Public Class Form1
 				End If
 
 				'check for the lowercase ".jpg" presence in the filename
-				If fileNameTemp.Contains(".jpg") Then
-					fileNameTemp = fileNameTemp.Replace(".jpg", "").Trim()
+				If fileNameTemp.ToLower().Contains(".jpg") Then
+					'If fileNameTemp.Contains(".jpg") Then
+					fileNameTemp = fileNameTemp.ToLower().Replace(".jpg", "").Trim()
 				End If
 
-				'check for the uppercase ".JPG" presence in the filename
-				If fileNameTemp.Contains(".JPG") Then
-					fileNameTemp = fileNameTemp.Replace(".JPG", "").Trim()
-				End If
+				''check for the uppercase ".JPG" presence in the filename
+				'If fileNameTemp.Contains(".JPG") Then
+				'	fileNameTemp = fileNameTemp.Replace(".JPG", "").Trim()
+				'End If
 
 				'6/5/14: Memphis make sure there's a space after middle initial and last name, before splitting:
 				'If fileNameTemp.Contains(".") Then
@@ -1321,56 +1306,109 @@ Public Class Form1
 					End If
 				Else
 					' If the filename does NOT have a period in it (middle name), then all we can do is:
-					'   strip and compress the string and compare it to the stripped and compressed CRM:
-					'   - compare against the entire CRM name
-					'   - if not match, compare against the CRM FirstName and LastName
-					'set the Property to indicate this photofile does NOT have a middle initial.
-					'MsgBox("There is no middle name, so unable to parse into names, can only compress and strip and compare...")
-					hasMiddleInitial = False
+					' 4/13/2015: try to parse out based on number of spaces in the filename:
+					'projectid <space> childid <space> firstname <space> MI <space> lastname.jpg
+					'get the elements of the name by splitting on spaces:
+					Dim nameItems As String()
+					'CleanoutExtraChars(fileNameTemp)
+					nameItems = fileNameTemp.Split(" ")
+
+					Dim spaceCounter As Integer = nameItems.Count - 1
+					'MsgBox(spaceCounter)
+
+					If spaceCounter = 4 Then
+						'parse out filename components here:
+						'For fileCounter = 0 To spaceCounter
+						'	MsgBox(nameItems(fileCounter))
+						'Next
+
+						'test for a middle initial versus another name!
+						Dim middleInitialString As String = nameItems(3)
+						If Not String.IsNullOrEmpty(middleInitialString) Then
+							If middleInitialString.Length = 1 Then
+								'populate the childData object:
+								childData = New ChildPhotoData()  'lookupid, projectid, name
+								childData.ChildProject = nameItems(0)
+								childData.ChildLookupId = nameItems(1)
+								childData.PhotoFile = fl.Name
+								childData.FileFirstName = nameItems(2) ' firstNameBuilder.ToString()
+								childData.FileLastName = nameItems(4) ' lastNameBuilder.ToString()
+								childData.HasMiddleInitial = True
+
+								'put the middle initial in the childname, as it will probably have it in CRM:
+								childData.ChildName = childData.FileFirstName.Replace(" ", "").Trim() + middleInitialString + childData.FileLastName.Replace(" ", "").Trim()
+
+								'set this flag to True for code down below:
+								childAlreadyPopulated = True
+
+								hasMiddleInitial = True
+							Else
+								hasMiddleInitial = False
+							End If
+						Else
+							hasMiddleInitial = False
+						End If
+
+					Else
+						'   strip and compress the string and compare it to the stripped and compressed CRM:
+						'   - compare against the entire CRM name
+						'   - if not match, compare against the CRM FirstName and LastName
+						'set the Property to indicate this photofile does NOT have a middle initial.
+						'MsgBox("There is no middle name, so unable to parse into names, can only compress and strip and compare...")
+						hasMiddleInitial = False
+					End If
+
+					'hasMiddleInitial = False
 				End If
-				' END OF 6/30/14 add
+					' END OF 6/30/14 add
 
 				If hasMiddleInitial = True Then
-					periodPosition = fileNameTemp.IndexOf(".")
-					firstNameString = fileNameTemp.Substring(0, periodPosition)
-					firstNameItems = firstNameString.Split(" ")
-					firstNameCounter = firstNameItems.Count - 1
-					firstNameBuilder = New StringBuilder()
-					'child project is first
-					'MsgBox(String.Format("Project: {0}", firstNameItems(0)))
-					'child id is 2nd
-					'MsgBox(String.Format("ChildId: {0}", firstNameItems(1)))
+					'only populate if we didn't do it above:
+					If childAlreadyPopulated = False Then
+						periodPosition = fileNameTemp.IndexOf(".")
+						firstNameString = fileNameTemp.Substring(0, periodPosition)
+						firstNameItems = firstNameString.Split(" ")
+						firstNameCounter = firstNameItems.Count - 1
+						firstNameBuilder = New StringBuilder()
+						'child project is first
+						'MsgBox(String.Format("Project: {0}", firstNameItems(0)))
+						'child id is 2nd
+						'MsgBox(String.Format("ChildId: {0}", firstNameItems(1)))
 
-					'Memphis: 7/7/14: we do NOT want to include the middle name/initial in the firstname
-					' so don't append the last item in the split array:
-					For counter = 2 To firstNameCounter - 1
-						'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), firstNameItems(counter)))
-						firstNameBuilder.Append(firstNameItems(counter))
-					Next
-					'MsgBox(String.Format("firstNameBuilder: {0}", firstNameBuilder.ToString()))
+						'Memphis: 7/7/14: we do NOT want to include the middle name/initial in the firstname
+						' so don't append the last item in the split array:
+						For counter = 2 To firstNameCounter - 1
+							'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), firstNameItems(counter)))
+							firstNameBuilder.Append(firstNameItems(counter))
+						Next
+						'MsgBox(String.Format("firstNameBuilder: {0}", firstNameBuilder.ToString()))
 
-					'Parse last names:
-					'    -Any words after the middle initial are the last name
-					'      - Split the substring from the IndexOf the period "." to the end of the string
-					lastNameString = fileNameTemp.Substring(periodPosition + 1).Trim()
-					lastNameItems = lastNameString.Split(" ")
-					lastNameCounter = lastNameItems.Count - 1
-					lastNameBuilder = New StringBuilder()
-					For counter = 0 To lastNameCounter
-						'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), lastNameItems(counter)))
-						lastNameBuilder.Append(lastNameItems(counter))
-					Next
-					'MsgBox(String.Format("lastNameBuilder: {0}", lastNameBuilder.ToString()))
+						'set the middle initial: 3rd item in the name array is middle initial
+						middleInitial = firstNameItems(3)
 
-					'populate the childData object:
-					childData = New ChildPhotoData()  'lookupid, projectid, name
-					childData.ChildProject = firstNameItems(0)
-					childData.ChildLookupId = firstNameItems(1)
-					childData.PhotoFile = fl.Name
-					childData.FileFirstName = firstNameBuilder.ToString()
-					childData.FileLastName = lastNameBuilder.ToString()
-					childData.HasMiddleInitial = hasMiddleInitial
-					childData.ChildName = childData.FileFirstName.Replace(" ", "").Trim() + childData.FileLastName.Replace(" ", "").Trim()
+						'Parse last names:
+						'    -Any words after the middle initial are the last name
+						'      - Split the substring from the IndexOf the period "." to the end of the string
+						lastNameString = fileNameTemp.Substring(periodPosition + 1).Trim()
+						lastNameItems = lastNameString.Split(" ")
+						lastNameCounter = lastNameItems.Count - 1
+						lastNameBuilder = New StringBuilder()
+						For counter = 0 To lastNameCounter
+							'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), lastNameItems(counter)))
+							lastNameBuilder.Append(lastNameItems(counter))
+						Next
+						'MsgBox(String.Format("lastNameBuilder: {0}", lastNameBuilder.ToString()))
+
+						'populate the childData object:
+						childData = New ChildPhotoData()  'lookupid, projectid, name
+						childData.ChildProject = firstNameItems(0)
+						childData.ChildLookupId = firstNameItems(1)
+						childData.PhotoFile = fl.Name
+						childData.FileFirstName = firstNameBuilder.ToString()
+						childData.FileLastName = lastNameBuilder.ToString()
+						childData.HasMiddleInitial = hasMiddleInitial
+						childData.ChildName = childData.FileFirstName.Replace(" ", "").Trim() + middleInitial + childData.FileLastName.Replace(" ", "").Trim()
+					End If
 				Else
 					'populate the childData object:
 					fileNameItems = fileNameTemp.Split(" ")
@@ -1401,54 +1439,6 @@ Public Class Form1
 					Next
 					childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
 				End If
-
-				'MsgBox(String.Format("Project: {0}", childData.ChildProject))
-				'MsgBox(String.Format("ChildId: {0}", childData.ChildLookupId))
-				'MsgBox(String.Format("PhotoFile: {0}", childData.PhotoFile))
-				'MsgBox(String.Format("FileFirstName: {0}", childData.FileFirstName))
-				'MsgBox(String.Format("FileLastName: {0}", childData.FileLastName))
-				'MsgBox(String.Format("ChildName: {0}", childData.ChildName))
-
-				'Memphis 7/7 commented out, replaced with code above:
-				'fileNameItems = fileNameTemp.Split(" ")
-				'dataCounter = fileNameItems.Count - 1
-				'childData = New ChildPhotoData()  'lookupid, projectid, name
-				'childData.ChildProject = fileNameItems(0)
-				'childData.ChildLookupId = fileNameItems(1)
-				'childData.PhotoFile = fl.Name
-				'childData.FileFirstName = fileNameItems(2)
-				'childData.HasMiddleInitial = hasMiddleInitial
-				'Memphis 7/7 end of comment out:
-
-				'AddSpacesToSentence(fileNameTemp.Substring(14).Trim(), True)
-				'text.Split(".").Length -1
-				'Memphis 7/7: took this out, no longer necessary:
-				'Dim periodCount As Integer = fileNameTemp.Split(".").Length - 1
-				'If periodCount = 1 Then
-				'	fileNameItems = AddSpacesToSentence(fileNameTemp.Substring(14).Trim(), True).Split(" ")
-				'	dataCounter = fileNameItems.Count - 1
-				'ElseIf periodCount > 1 Then
-				'	'probably a trailing period, so remove that one:
-				'	Dim tempString = fileNameTemp.Substring(0, fileNameTemp.LastIndexOf("."))
-				'	fileNameItems = AddSpacesToSentence(tempString.Substring(14).Trim(), True).Split(" ")
-				'	dataCounter = fileNameItems.Count - 1
-				'End If
-				'end 7/7
-
-
-				'Memphis 7/7 moved up above:
-				'concatenate the names values
-				'Dim nameBuilder As StringBuilder = New StringBuilder()
-				'For fileCounter = 2 To dataCounter
-				'	If Not fileNameItems(fileCounter).ToLower().Contains("copy") Then
-				'		nameBuilder.Append(fileNameItems(fileCounter))
-				'	End If
-				'	If fileCounter = 3 Then
-				'		childData.FileLastName = fileNameItems(fileCounter)
-				'	End If
-				'Next
-				'childData.ChildName = nameBuilder.ToString().Replace(" ", "").Trim()
-				'end of move
 
 				'if there is not a C in the childlookupid then we can't use this one:
 				If childData.ChildLookupId.ToLower().StartsWith("c") Then
