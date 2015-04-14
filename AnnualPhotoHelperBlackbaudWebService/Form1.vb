@@ -1370,21 +1370,27 @@ Public Class Form1
 						firstNameItems = firstNameString.Split(" ")
 						firstNameCounter = firstNameItems.Count - 1
 						firstNameBuilder = New StringBuilder()
-						'child project is first
-						'MsgBox(String.Format("Project: {0}", firstNameItems(0)))
-						'child id is 2nd
-						'MsgBox(String.Format("ChildId: {0}", firstNameItems(1)))
 
-						'Memphis: 7/7/14: we do NOT want to include the middle name/initial in the firstname
-						' so don't append the last item in the split array:
-						For counter = 2 To firstNameCounter - 1
-							'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), firstNameItems(counter)))
-							firstNameBuilder.Append(firstNameItems(counter))
-						Next
-						'MsgBox(String.Format("firstNameBuilder: {0}", firstNameBuilder.ToString()))
+						'Memphis 4/14/15: need to account for this scenario:  filename is IN-141 C319506 P.Madhucharan.jpg
+						' so there aren't any spaces between the name elements, and the period is NOT at the middle name!
+						If firstNameCounter = 2 Then
+							hasMiddleInitial = False
+							firstNameBuilder.Append(firstNameItems(2))
+							'MsgBox("Uh Oh!")
+						Else
+							'Memphis: 7/7/14: we do NOT want to include the middle name/initial in the firstname
+							' so don't append the last item in the split array:
+							For counter = 2 To firstNameCounter - 1
+								'MsgBox(String.Format("Counter: {0} {1}", CStr(counter), firstNameItems(counter)))
+								firstNameBuilder.Append(firstNameItems(counter))
+							Next
+						End If
 
 						'set the middle initial: 3rd item in the name array is middle initial
-						middleInitial = firstNameItems(3)
+						'Memphis 4/14/15: make sure there really is a 3rd item in the array:
+						If firstNameItems.Count = 4 Then
+							middleInitial = firstNameItems(3)
+						End If
 
 						'Parse last names:
 						'    -Any words after the middle initial are the last name
